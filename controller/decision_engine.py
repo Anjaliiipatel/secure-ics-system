@@ -1,30 +1,27 @@
-import logging
-
-# Configure alerting mechanism
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("DecisionEngine")
-
-def trigger_alert(metric_name, value, threshold):
-    """Action to take when threshold is exceeded."""
-    logger.warning(f"ALERT: {metric_name} value {value} exceeded threshold of {threshold}!")
-
 class DecisionEngine:
-    def __init__(self, thresholds):
-        self.thresholds = thresholds
-    
-    def process_telemetry(self, telemetry_data):
-        """Processes incoming data and triggers rules."""
-        temperature = telemetry_data.get("temperature")
+    def __init__(self, monitor_ref):
+        self.monitor = monitor_ref
 
-        if temperature and temperature > self.thresholds['temp_max']:
-            trigger_alert("Temperature", temperature, self.thresholds['temp_max'])
+    def process_telemetry(self, sensor_id, data_type, value, anomaly_alerts):
+        """
+        Coordinates between security alerts and physical safety.
+        """
+        # 1. Immediate Operational Response
+        if data_type == "temperature" and value > 95:
+            self._execute_safety_protocol("COOLING_INIT", sensor_id)
 
-if __name__ == "__main__":
-    config = {'temp_max': 90}
-    engine = DecisionEngine(config)
+        if data_type == "pressure" and value < 20:
+            self._execute_safety_protocol("EMERGENCY_SHUTDOWN", sensor_id)
 
-    #Simulated telemetry data
-    data = {'temperature': 92, 'location': 'cabinet_1'}
+        # 2. Security-Based Response
+        for alert in anomaly_alerts:
+            self.monitor.log_event(alert) # Send to monitoring
+            
+            if alert['severity'] == 'CRITICAL':
+                self._isolate_sensor(alert['sensor_id'])
 
-    #Process
-    engine.process_telemetry(data)
+    def _execute_safety_protocol(self, action, target):
+        print(f"[CONTROL] {action} triggered for {target}!")
+
+    def _isolate_sensor(self, sensor_id):
+        print(f"[SECURITY] Isolating compromised sensor: {sensor_id}")
