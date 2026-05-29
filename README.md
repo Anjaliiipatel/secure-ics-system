@@ -18,7 +18,6 @@ The primary objectives of this project are:
  -Explore operational technology (OT) cybersecurity concepts
 
 ## System Architecture
-The platform follows a layered secure architecture model
 <img width="7665" height="1525" alt="image" src="https://github.com/user-attachments/assets/c0d750d9-1494-4c56-93a6-88b899b295d0" />
 
 
