@@ -1,13 +1,13 @@
-**# Secure ICS Platform**
+## Secure ICS Platform
 
-**## Overview**
+## Overview
 The Secure Distributed ICS Security Platform is a cybersecurity-focused industrial control system (ICS) simulation environment designed to model secure telemetry communications, zero-trust architecture, anomaly detection, and adversarial attack scenarios within cyber-physical systems.
 
 This platform simulates a distributed industrial environment where multiple sensor nodes communicate with a centralized controller through a secure telemetry pipeline. The system implements layered security controls including authentication, integrity validation, replay protection, behavioral anomaly detection, centralized logging, and security monitoring.
 
 The project is designed to mirror real-world operational technology (OT) and industrial cybersecurity concepts commonly found in aerospace, manufacturing, critical infrastructure, and defense environments.
  
-**## Objectives**
+## Objectives
 The primary objectives of this project are:
  -Simulate distributed industrial telemetry systems
  -Implement zero-trust communication principles
@@ -20,7 +20,7 @@ The primary objectives of this project are:
 ## System Architecture
 The platform follows a layered secure architecture model.
 
-**## Core Components**
+## Core Components
 
 ### Sensor Layer
 Simulated industrial sensor nodes generate telemetry including:
@@ -63,7 +63,7 @@ Features:
 - Attack monitoring
 - Event visibility
 
-**## Security Features**
+## Security Features
 ## Zero Trust Communication
 All sensor nodes must authenticate before telemetry is accepted by the platform. No device or telemetry source is trusted by default.
 
@@ -122,7 +122,7 @@ Attempts communication using invalid credentials or rogue API keys.
 Test authentication enforcement and logging capabilities.
 
 
-**## Technologies**
+## Technologies
 | Python | Core platform development |
 | Flask | Telemetry API services |
 | Streamlit | Security monitoring dashboard |
