@@ -1,4 +1,5 @@
 **# Secure ICS Platform**
+
 **## Overview**
 The Secure Distributed ICS Security Platform is a cybersecurity-focused industrial control system (ICS) simulation environment designed to model secure telemetry communications, zero-trust architecture, anomaly detection, and adversarial attack scenarios within cyber-physical systems.
 
