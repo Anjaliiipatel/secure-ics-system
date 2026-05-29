@@ -18,7 +18,8 @@ The primary objectives of this project are:
  -Explore operational technology (OT) cybersecurity concepts
 
 ## System Architecture
-The platform follows a layered secure architecture model.
+The platform follows a layered secure architecture model
+docs/architecture/ICS System Security Architecture.png
 
 ## Core Components
 
