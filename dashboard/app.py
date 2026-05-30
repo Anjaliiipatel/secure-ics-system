@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 
 # --------------------------------------------------
-# Page Configuration
+# PAGE CONFIG
 # --------------------------------------------------
 
 st.set_page_config(
@@ -13,147 +14,223 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# Custom Styling
+# CUSTOM CSS
 # --------------------------------------------------
 
 st.markdown("""
 <style>
 
+/* Main background */
 .stApp {
-    background-color: #0A0F1C;
+    background: linear-gradient(
+        180deg,
+        #0B1020 0%,
+        #111827 100%
+    );
 }
 
-h1 {
-    color: #E6EDF3;
+/* Hide Streamlit branding */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+
+/* Hero Section */
+.hero {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+
+    border: 1px solid rgba(255,255,255,0.08);
+
+    border-radius: 25px;
+
+    padding: 30px;
+
+    margin-bottom: 25px;
+}
+
+/* Typography */
+.main-title {
+    color: white;
+
+    font-size: 3rem;
+
     font-weight: 700;
 }
 
-h2, h3 {
-    color: #C9D1D9;
+.subtitle {
+    color: #94A3B8;
+
+    font-size: 1rem;
+
+    margin-top: 10px;
 }
 
-[data-testid="metric-container"] {
-    background-color: #161B22;
-    border: 1px solid #30363D;
-    padding: 15px;
-    border-radius: 12px;
-}
+.section-header {
+    color: white;
 
-section[data-testid="stSidebar"] {
-    background-color: #111827;
+    font-size: 1.5rem;
+
+    font-weight: 600;
+
+    margin-top: 20px;
+
+    margin-bottom: 10px;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# Sidebar
+# SIDEBAR
 # --------------------------------------------------
 
 with st.sidebar:
+
     st.title("Platform Modules")
 
     st.markdown("""
     - Dashboard
     - Telemetry
     - Detection Engine
-    - Security Events
-    - Attack Activity
+    - Threat Activity
+    - Analytics
     - System Logs
     """)
 
+    st.divider()
+
+    st.success("Platform Status: Operational")
+
 # --------------------------------------------------
-# Header
+# HERO SECTION
 # --------------------------------------------------
 
 st.markdown("""
-# 🛡️ Secure Distributed ICS Security Platform
+<div class="hero">
 
-### Systems Security Monitoring Console
+<div class="main-title">
+🛡️ Secure Distributed ICS Security Platform
+</div>
+
+<div class="subtitle">
+Systems Security Monitoring Console
 
 Operational Technology Security • Telemetry Assurance • Threat Detection
-""")
+</div>
 
-st.success(
-    "System Status: OPERATIONAL | Detection Engine Active | Security Gateway Online"
+</div>
+""", unsafe_allow_html=True)
+
+# --------------------------------------------------
+# SYSTEM STATUS
+# --------------------------------------------------
+
+st.markdown(
+    '<div class="section-header">Platform Status</div>',
+    unsafe_allow_html=True
 )
-
-# --------------------------------------------------
-# Metrics
-# --------------------------------------------------
-
-st.header("System Overview")
 
 col1, col2, col3, col4 = st.columns(4)
 
-col1.metric(
-    "Sensors Online",
-    "3"
-)
+with col1:
+    st.metric(
+        "Sensors Online",
+        "3",
+        "+1"
+    )
 
-col2.metric(
-    "Active Alerts",
-    "2"
-)
+with col2:
+    st.metric(
+        "Active Alerts",
+        "2",
+        "-1"
+    )
 
-col3.metric(
-    "Threat Events",
-    "12"
-)
+with col3:
+    st.metric(
+        "Threat Events",
+        "12",
+        "+3"
+    )
 
-col4.metric(
-    "System Health",
-    "98%"
-)
-
-# --------------------------------------------------
-# Telemetry Overview
-# --------------------------------------------------
-
-st.header("Live Telemetry")
-
-telemetry_df = pd.DataFrame({
-    "Sensor": [
-        "TEMP_01",
-        "PRESS_01",
-        "RPM_01"
-    ],
-    "Value": [
-        72.4,
-        31.2,
-        1450
-    ],
-    "Status": [
-        "NORMAL",
-        "NORMAL",
-        "NORMAL"
-    ]
-})
-
-st.dataframe(
-    telemetry_df,
-    use_container_width=True
-)
+with col4:
+    st.metric(
+        "System Health",
+        "98%",
+        "+2%"
+    )
 
 # --------------------------------------------------
-# Security Alerts
+# TELEMETRY SECTION
 # --------------------------------------------------
 
-st.header("Security Alerts")
-
-st.warning(
-    "HIGH - Telemetry anomaly detected on TEMP_01"
+st.markdown(
+    '<div class="section-header">Live Telemetry</div>',
+    unsafe_allow_html=True
 )
 
-st.error(
-    "CRITICAL - Replay attack detected"
+telemetry_col1, telemetry_col2, telemetry_col3 = st.columns(3)
+
+with telemetry_col1:
+    st.metric(
+        "Temperature",
+        "72.4 °F",
+        "+1.2"
+    )
+
+with telemetry_col2:
+    st.metric(
+        "Pressure",
+        "31.2 PSI",
+        "-0.3"
+    )
+
+with telemetry_col3:
+    st.metric(
+        "RPM",
+        "1450",
+        "+25"
+    )
+
+# --------------------------------------------------
+# SECURITY EVENTS
+# --------------------------------------------------
+
+st.markdown(
+    '<div class="section-header">Security Events</div>',
+    unsafe_allow_html=True
 )
 
+alert_col1, alert_col2 = st.columns(2)
+
+with alert_col1:
+
+    st.error(
+        "CRITICAL • Replay attack detected"
+    )
+
+    st.warning(
+        "HIGH • Telemetry anomaly detected"
+    )
+
+with alert_col2:
+
+    st.info(
+        "LOW • Sensor drift observed"
+    )
+
+    st.success(
+        "Authentication validation successful"
+    )
+
 # --------------------------------------------------
-# Attack Activity
+# ATTACK ACTIVITY
 # --------------------------------------------------
 
-st.header("Attack Activity")
+st.markdown(
+    '<div class="section-header">Attack Activity</div>',
+    unsafe_allow_html=True
+)
 
 attack_df = pd.DataFrame({
     "Attack Type": [
@@ -176,27 +253,54 @@ st.dataframe(
 )
 
 # --------------------------------------------------
-# Recent Security Events
+# TELEMETRY ANALYTICS
 # --------------------------------------------------
 
-st.header("Recent Security Events")
+st.markdown(
+    '<div class="section-header">Telemetry Analytics</div>',
+    unsafe_allow_html=True
+)
 
-sample_logs = [
-    "2026-05-20 14:03:11 | HIGH | Telemetry anomaly detected",
-    "2026-05-20 14:04:02 | CRITICAL | Replay attack detected",
-    "2026-05-20 14:07:18 | MEDIUM | Authentication failure",
-    "2026-05-20 14:09:55 | HIGH | Tampered telemetry rejected"
+np.random.seed(42)
+
+temperature_data = pd.DataFrame({
+    "Temperature": np.random.normal(
+        72,
+        2,
+        30
+    )
+})
+
+st.line_chart(
+    temperature_data,
+    use_container_width=True
+)
+
+# --------------------------------------------------
+# RECENT EVENTS
+# --------------------------------------------------
+
+st.markdown(
+    '<div class="section-header">Recent Security Events</div>',
+    unsafe_allow_html=True
+)
+
+events = [
+    "2026-06-01 14:03:11 | HIGH | Telemetry anomaly detected",
+    "2026-06-01 14:04:02 | CRITICAL | Replay attack detected",
+    "2026-06-01 14:07:18 | MEDIUM | Authentication failure",
+    "2026-06-01 14:09:55 | HIGH | Tampered telemetry rejected"
 ]
 
-for log in sample_logs:
-    st.code(log)
+for event in events:
+    st.code(event)
 
 # --------------------------------------------------
-# Footer
+# FOOTER
 # --------------------------------------------------
 
-st.markdown("---")
+st.divider()
 
 st.caption(
-    "Secure Distributed ICS Platform | Systems Security Engineering Project"
+    "Secure Distributed ICS Security Platform | Systems Security Engineering Project"
 )
