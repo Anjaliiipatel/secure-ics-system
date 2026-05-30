@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import json
+import os
+import plotly.express as px
 
 # --------------------------------------------------
 # PAGE CONFIG
@@ -9,9 +12,26 @@ import numpy as np
 st.set_page_config(
     page_title="Secure ICS Platform",
     page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
+
+# --------------------------------------------------
+# HELPER FUNCTIONS
+# --------------------------------------------------
+
+def load_telemetry():
+    try:
+        with open("../logs/telemetry.json", "r") as f:
+            return json.load(f)
+    except:
+        return []
+
+def load_logs():
+    try:
+        with open("../logs/system_logs.txt", "r") as f:
+            return f.readlines()[-15:]
+    except:
+        return []
 
 # --------------------------------------------------
 # CUSTOM CSS
@@ -20,7 +40,6 @@ st.set_page_config(
 st.markdown("""
 <style>
 
-/* Main background */
 .stApp {
     background: linear-gradient(
         180deg,
@@ -29,52 +48,40 @@ st.markdown("""
     );
 }
 
-/* Hide Streamlit branding */
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
+#MainMenu {visibility:hidden;}
+footer {visibility:hidden;}
+header {visibility:hidden;}
 
-/* Hero Section */
 .hero {
     background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(20px);
-
     border: 1px solid rgba(255,255,255,0.08);
-
-    border-radius: 25px;
-
-    padding: 30px;
-
+    border-radius: 20px;
+    padding: 25px;
     margin-bottom: 25px;
 }
 
-/* Typography */
 .main-title {
     color: white;
-
     font-size: 3rem;
-
     font-weight: 700;
 }
 
 .subtitle {
     color: #94A3B8;
+}
 
-    font-size: 1rem;
-
-    margin-top: 10px;
+[data-testid="metric-container"] {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 15px;
 }
 
 .section-header {
     color: white;
-
-    font-size: 1.5rem;
-
+    font-size: 1.4rem;
     font-weight: 600;
-
     margin-top: 20px;
-
-    margin-bottom: 10px;
 }
 
 </style>
@@ -88,18 +95,16 @@ with st.sidebar:
 
     st.title("Platform Modules")
 
-    st.markdown("""
-    - Dashboard
-    - Telemetry
-    - Detection Engine
-    - Threat Activity
-    - Analytics
-    - System Logs
-    """)
-
-    st.divider()
-
-    st.success("Platform Status: Operational")
+    page = st.radio(
+        "Navigation",
+        [
+            "Dashboard",
+            "Telemetry",
+            "Alerts",
+            "Threat Activity",
+            "System Logs"
+        ]
+    )
 
 # --------------------------------------------------
 # HERO SECTION
@@ -114,15 +119,13 @@ st.markdown("""
 
 <div class="subtitle">
 Systems Security Monitoring Console
-
-Operational Technology Security • Telemetry Assurance • Threat Detection
 </div>
 
 </div>
 """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# SYSTEM STATUS
+# PLATFORM STATUS
 # --------------------------------------------------
 
 st.markdown(
@@ -132,36 +135,13 @@ st.markdown(
 
 col1, col2, col3, col4 = st.columns(4)
 
-with col1:
-    st.metric(
-        "Sensors Online",
-        "3",
-        "+1"
-    )
-
-with col2:
-    st.metric(
-        "Active Alerts",
-        "2",
-        "-1"
-    )
-
-with col3:
-    st.metric(
-        "Threat Events",
-        "12",
-        "+3"
-    )
-
-with col4:
-    st.metric(
-        "System Health",
-        "98%",
-        "+2%"
-    )
+col1.metric("Sensors Online", "3")
+col2.metric("Active Alerts", "2")
+col3.metric("Threat Events", "12")
+col4.metric("System Health", "98%")
 
 # --------------------------------------------------
-# TELEMETRY SECTION
+# LIVE TELEMETRY
 # --------------------------------------------------
 
 st.markdown(
@@ -169,58 +149,31 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-telemetry_col1, telemetry_col2, telemetry_col3 = st.columns(3)
+t1, t2, t3 = st.columns(3)
 
-with telemetry_col1:
-    st.metric(
-        "Temperature",
-        "72.4 °F",
-        "+1.2"
-    )
-
-with telemetry_col2:
-    st.metric(
-        "Pressure",
-        "31.2 PSI",
-        "-0.3"
-    )
-
-with telemetry_col3:
-    st.metric(
-        "RPM",
-        "1450",
-        "+25"
-    )
+t1.metric("Temperature", "72.4 °F", "+0.8")
+t2.metric("Pressure", "31.2 PSI", "-0.2")
+t3.metric("RPM", "1450", "+35")
 
 # --------------------------------------------------
-# SECURITY EVENTS
+# SECURITY ALERTS
 # --------------------------------------------------
 
 st.markdown(
-    '<div class="section-header">Security Events</div>',
+    '<div class="section-header">Security Alerts</div>',
     unsafe_allow_html=True
 )
 
-alert_col1, alert_col2 = st.columns(2)
+alert1, alert2 = st.columns(2)
 
-with alert_col1:
-
+with alert1:
     st.error(
         "CRITICAL • Replay attack detected"
     )
 
+with alert2:
     st.warning(
         "HIGH • Telemetry anomaly detected"
-    )
-
-with alert_col2:
-
-    st.info(
-        "LOW • Sensor drift observed"
-    )
-
-    st.success(
-        "Authentication validation successful"
     )
 
 # --------------------------------------------------
@@ -239,7 +192,7 @@ attack_df = pd.DataFrame({
         "Flooding",
         "Tampering"
     ],
-    "Events Detected": [
+    "Events": [
         4,
         2,
         1,
@@ -261,23 +214,35 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-np.random.seed(42)
-
-temperature_data = pd.DataFrame({
-    "Temperature": np.random.normal(
-        72,
-        2,
-        30
-    )
+chart_data = pd.DataFrame({
+    "Time": range(30),
+    "Temperature":
+        np.random.normal(
+            72,
+            2,
+            30
+        )
 })
 
-st.line_chart(
-    temperature_data,
+fig = px.line(
+    chart_data,
+    x="Time",
+    y="Temperature"
+)
+
+fig.update_layout(
+    template="plotly_dark",
+    paper_bgcolor="#0B1020",
+    plot_bgcolor="#0B1020"
+)
+
+st.plotly_chart(
+    fig,
     use_container_width=True
 )
 
 # --------------------------------------------------
-# RECENT EVENTS
+# RECENT SECURITY EVENTS
 # --------------------------------------------------
 
 st.markdown(
@@ -285,15 +250,18 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-events = [
-    "2026-06-01 14:03:11 | HIGH | Telemetry anomaly detected",
-    "2026-06-01 14:04:02 | CRITICAL | Replay attack detected",
-    "2026-06-01 14:07:18 | MEDIUM | Authentication failure",
-    "2026-06-01 14:09:55 | HIGH | Tampered telemetry rejected"
-]
+logs = load_logs()
 
-for event in events:
-    st.code(event)
+if logs:
+
+    for log in reversed(logs):
+        st.code(log)
+
+else:
+
+    st.info(
+        "No security events found."
+    )
 
 # --------------------------------------------------
 # FOOTER
