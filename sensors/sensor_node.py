@@ -1,45 +1,56 @@
-#Script designed for a sensor node that reads temperature, pressure, and RPM, then logs them 
-#with a timestamp. Uses a loop for periodic readings for capturing data and then will print onto the console. 
-
-import time
+import json
 import random
+import time
+from pathlib import Path
 from datetime import datetime
 
-#Sensor Node - Data Script
+BASE_DIR = Path(__file__).resolve().parents[1]
 
-def read_temperature():
-    #Simulate temperature reading in Celsius
-    return round(random.uniform(20.0, 30.0), 2)
+TELEMETRY_PATH = BASE_DIR / "logs" / "telemetry.json"
 
-def read_pressure():
-    #Simulate temperature reading in Celsius
-    return round(random.uniform(1000.0, 1015.0), 2)
+temperature = 72.0
+pressure = 418.0
+rpm = 1450
 
-def read_rpm():
-    #Simulate RPM reading
-    return random.randint(1000, 3000)
+while True:
 
-def main():
+    temperature += random.uniform(-0.5, 0.5)
+    pressure += random.uniform(-2, 2)
+    rpm += random.randint(-15, 15)
+
+    telemetry_point = {
+        "timestamp": datetime.now().isoformat(),
+        "temperature": round(temperature, 2),
+        "pressure": round(pressure, 2),
+        "rpm": rpm
+    }
+
     try:
-        while True:
-            # Get Timestamps
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            # Reads Sensors
-            temp = read_temperature()
-            press = read_pressure()
-            rpm = read_rpm()
+        with open(
+            TELEMETRY_PATH,
+            "r"
+        ) as f:
 
-            # Format and Print Data
-            data_str = f"{timestamp} | Temperature: {temp} °C | Pressure: {press} hPa | RPM: {rpm}"
-            print(data_str)
+            data = json.load(f)
 
-            # Give option to log to a file
-            # with open("sensor_log.csv", "a") as f:
-            #    f.write(f"{timestamp},{temp},{press},{rpm}\n")
+    except:
 
-    except KeyboardInterrupt:
-        print("\nSensor node stopped.")
+        data = []
 
-if __name__ == "__main__":
-    main()
+    data.append(telemetry_point)
+
+    data = data[-100:]
+
+    with open(
+        TELEMETRY_PATH,
+        "w"
+    ) as f:
+
+        json.dump(
+            data,
+            f,
+            indent=4
+        )
+
+    time.sleep(1)
