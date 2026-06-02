@@ -540,33 +540,50 @@ with main_left:
         """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
+# ==========================================================
+# OPERATIONAL STATUS
+# ==========================================================
 
-    st.markdown("""
-    <div class="panel">
-        <div class="section-title">Operational Status</div>
-        <div class="section-subtitle">ICS device fleet</div>
+st.markdown("""
+<div class="panel">
+    <div class="section-title">Operational Status</div>
+    <div class="section-subtitle">ICS Device Fleet</div>
+</div>
+""", unsafe_allow_html=True)
 
-        <div class="device-row device-head">
-            <div>Device</div><div>Type</div><div>Zone</div><div>Load</div><div>Status</div>
-        </div>
+devices = [
+    ("🟢 PLC-01", "PLC", "Zone A", "38%", "ONLINE"),
+    ("🟡 PLC-04", "PLC", "Zone A", "81%", "DEGRADED"),
+    ("🟢 RTU-12", "RTU", "Zone B", "47%", "ONLINE"),
+    ("🟢 Gateway-01", "Gateway", "DMZ", "64%", "ONLINE"),
+]
 
-        <div class="device-row">
-            <div class="device-name"><span class="status-dot"></span> PLC-01</div><div class="muted">PLC</div><div class="muted">Zone A</div><div class="muted">38%</div><div style="color:#10B981;">ONLINE</div>
-        </div>
+header1, header2, header3, header4, header5 = st.columns([2,1,1,1,1])
 
-        <div class="device-row">
-            <div class="device-name"><span class="status-dot warn-dot"></span> PLC-04</div><div class="muted">PLC</div><div class="muted">Zone A</div><div class="muted">81%</div><div style="color:#F59E0B;">DEGRADED</div>
-        </div>
+header1.markdown("**Device**")
+header2.markdown("**Type**")
+header3.markdown("**Zone**")
+header4.markdown("**Load**")
+header5.markdown("**Status**")
 
-        <div class="device-row">
-            <div class="device-name"><span class="status-dot"></span> RTU-12</div><div class="muted">RTU</div><div class="muted">Zone B</div><div class="muted">47%</div><div style="color:#10B981;">ONLINE</div>
-        </div>
+st.divider()
 
-        <div class="device-row">
-            <div class="device-name"><span class="status-dot"></span> Gateway-01</div><div class="muted">Gateway</div><div class="muted">DMZ</div><div class="muted">64%</div><div style="color:#10B981;">ONLINE</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+for device, dtype, zone, load, status in devices:
+
+    c1, c2, c3, c4, c5 = st.columns([2,1,1,1,1])
+
+    c1.markdown(device)
+    c2.markdown(dtype)
+    c3.markdown(zone)
+    c4.markdown(load)
+
+    if status == "ONLINE":
+        c5.success(status)
+    elif status == "DEGRADED":
+        c5.warning(status)
+    else:
+        c5.error(status)
+        
 
 with main_right:
     st.markdown("""
