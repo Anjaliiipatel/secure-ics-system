@@ -2,9 +2,9 @@ from pathlib import Path
 from datetime import datetime
 import time
 
-from security.validator import TelemetryValidator
-from security.replay_detector import ReplayDetector
-from security.anomaly_detector import AnomalyDetector
+from security.validation import TelemetryValidator
+from security.replay_detection import ReplayDetector
+from security.anomaly_detection import AnomalyDetector
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
