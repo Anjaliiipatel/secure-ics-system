@@ -1,603 +1,408 @@
-import json
-from pathlib import Path
+import { Activity, ShieldCheck, AlertTriangle, Cpu, Gauge, Radio, Wifi, Lock } from "lucide-react";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { useAlerts, useAttacks, useDevices, useTelemetry, type Alert, type AttackEvent, type Device } from "@/lib/dashboard-data";
+import { useEffect, useState } from "react";
 
-import numpy as np
-import pandas as pd
-import plotly.express as px
-import streamlit as st
-
-try:
-    from streamlit_autorefresh import st_autorefresh
-except ImportError:
-    st_autorefresh = None
-
-
-# ==========================================================
-# PAGE CONFIG
-# ==========================================================
-
-st.set_page_config(
-    page_title="Secure ICS Platform",
-    page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
-
-# ==========================================================
-# AUTO REFRESH
-# ==========================================================
-
-if st_autorefresh:
-    st_autorefresh(interval=2000, key="live_telemetry_refresh")
-
-
-# ==========================================================
-# PATHS
-# ==========================================================
-
-BASE_DIR = Path(__file__).resolve().parents[1]
-TELEMETRY_PATH = BASE_DIR / "logs" / "telemetry.json"
-LOG_PATH = BASE_DIR / "logs" / "system_logs.txt"
-
-
-# ==========================================================
-# HELPER FUNCTIONS
-# ==========================================================
-
-def load_telemetry():
-    try:
-        with open(TELEMETRY_PATH, "r", encoding="utf-8") as file:
-            data = json.load(file)
-
-        if isinstance(data, list):
-            return data
-
-        return []
-
-    except (FileNotFoundError, json.JSONDecodeError):
-        return []
-
-
-def load_logs():
-    try:
-        with open(LOG_PATH, "r", encoding="utf-8") as file:
-            return file.readlines()[-12:]
-
-    except FileNotFoundError:
-        return []
-
-
-def generate_fallback_telemetry():
-    timestamps = pd.date_range(
-        end=pd.Timestamp.now(),
-        periods=40,
-        freq="2s"
-    )
-
-    return pd.DataFrame({
-        "timestamp": timestamps,
-        "temperature": np.random.normal(72, 1.8, 40),
-        "pressure": np.random.normal(418, 5, 40),
-        "rpm": np.random.normal(1450, 35, 40),
-    })
-
-
-def build_line_chart(df, y_value, title, unit):
-    fig = px.line(
-        df,
-        x="timestamp",
-        y=y_value,
-        title=title,
-        markers=False,
-    )
-
-    fig.update_traces(
-        line=dict(width=3),
-        hovertemplate=f"%{{y:.2f}} {unit}<extra></extra>",
-    )
-
-    fig.update_layout(
-        template="plotly_dark",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#E5E7EB"),
-        title=dict(
-            font=dict(size=18, color="#F8FAFC"),
-            x=0.02,
-        ),
-        margin=dict(l=10, r=10, t=45, b=10),
-        height=290,
-        showlegend=False,
-        transition={"duration": 500},
-        xaxis=dict(
-            showgrid=False,
-            title="",
-        ),
-        yaxis=dict(
-            gridcolor="rgba(255,255,255,0.08)",
-            title="",
-        ),
-    )
-
-    return fig
-
-
-def severity_class(log_line):
-    upper_line = log_line.upper()
-
-    if "CRITICAL" in upper_line:
-        return "critical"
-
-    if "HIGH" in upper_line:
-        return "high"
-
-    if "MEDIUM" in upper_line:
-        return "medium"
-
-    if "LOW" in upper_line:
-        return "low"
-
-    return "info"
-
-
-# ==========================================================
-# DATA
-# ==========================================================
-
-telemetry_records = load_telemetry()
-
-if telemetry_records:
-    telemetry_df = pd.DataFrame(telemetry_records)
-
-    if "timestamp" in telemetry_df.columns:
-        telemetry_df["timestamp"] = pd.to_datetime(
-            telemetry_df["timestamp"],
-            errors="coerce"
-        )
-
-    required_columns = {"timestamp", "temperature", "pressure", "rpm"}
-
-    if not required_columns.issubset(set(telemetry_df.columns)):
-        telemetry_df = generate_fallback_telemetry()
-
-else:
-    telemetry_df = generate_fallback_telemetry()
-
-latest = telemetry_df.iloc[-1]
-
-logs = load_logs()
-
-active_alerts = sum(
-    1 for log in logs
-    if any(level in log.upper() for level in ["LOW", "MEDIUM", "HIGH", "CRITICAL"])
-)
-
-critical_alerts = sum(
-    1 for log in logs
-    if "CRITICAL" in log.upper()
-)
-
-
-# ==========================================================
-# CSS
-# ==========================================================
-
-st.markdown(
-    """
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-
-html, body, [class*="css"] {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+function useClock() {
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return now;
 }
 
-.stApp {
-    background:
-        radial-gradient(circle at 8% 5%, rgba(59,130,246,0.24) 0%, transparent 28%),
-        radial-gradient(circle at 90% 12%, rgba(16,185,129,0.16) 0%, transparent 24%),
-        linear-gradient(180deg, #07101F 0%, #030712 100%);
-    color: #E5E7EB;
-}
-
-#MainMenu, footer, header {
-    visibility: hidden;
-}
-
-.block-container {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-}
-
-section[data-testid="stSidebar"] {
-    background: rgba(8, 13, 26, 0.92);
-    border-right: 1px solid rgba(255,255,255,0.08);
-}
-
-.hero {
-    background: rgba(255,255,255,0.055);
-    backdrop-filter: blur(28px);
-    -webkit-backdrop-filter: blur(28px);
-    border: 1px solid rgba(255,255,255,0.10);
-    border-radius: 30px;
-    padding: 34px;
-    margin-bottom: 26px;
-    box-shadow: 0 24px 70px rgba(0,0,0,0.35);
-    animation: fadeUp 0.75s ease;
-}
-
-.main-title {
-    color: #F8FAFC;
-    font-size: 3.15rem;
-    font-weight: 850;
-    letter-spacing: -1.4px;
-    line-height: 1.05;
-}
-
-.subtitle {
-    color: #94A3B8;
-    font-size: 1.03rem;
-    margin-top: 12px;
-}
-
-.status-chip {
-    display: inline-block;
-    margin-top: 20px;
-    background: rgba(16,185,129,0.14);
-    color: #34D399;
-    border: 1px solid rgba(52,211,153,0.32);
-    padding: 8px 14px;
-    border-radius: 999px;
-    font-weight: 800;
-    font-size: 0.78rem;
-    letter-spacing: 0.6px;
-}
-
-.section-title {
-    color: #F8FAFC;
-    font-size: 1.35rem;
-    font-weight: 780;
-    margin-top: 26px;
-    margin-bottom: 12px;
-    letter-spacing: -0.3px;
-}
-
-.section-subtitle {
-    color: #94A3B8;
-    font-size: 0.92rem;
-    margin-bottom: 12px;
-}
-
-[data-testid="metric-container"] {
-    background: rgba(255,255,255,0.055);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.09);
-    border-radius: 24px;
-    padding: 18px;
-    box-shadow: 0 18px 40px rgba(0,0,0,0.24);
-    animation: fadeUp 0.95s ease;
-}
-
-[data-testid="metric-container"] label {
-    color: #94A3B8 !important;
-    font-weight: 650 !important;
-}
-
-[data-testid="stMetricValue"] {
-    color: #F8FAFC !important;
-    font-weight: 850 !important;
-}
-
-[data-testid="stMetricDelta"] {
-    font-weight: 700 !important;
-}
-
-.glass-card {
-    background: rgba(255,255,255,0.055);
-    backdrop-filter: blur(22px);
-    -webkit-backdrop-filter: blur(22px);
-    border: 1px solid rgba(255,255,255,0.09);
-    border-radius: 24px;
-    padding: 19px;
-    margin-bottom: 14px;
-    box-shadow: 0 16px 44px rgba(0,0,0,0.25);
-    animation: fadeUp 1s ease;
-}
-
-.card-title {
-    color: #F8FAFC;
-    font-size: 1rem;
-    font-weight: 800;
-    margin-bottom: 6px;
-}
-
-.card-body {
-    color: #CBD5E1;
-    font-size: 0.92rem;
-}
-
-.badge {
-    display: inline-block;
-    padding: 5px 9px;
-    border-radius: 999px;
-    font-size: 0.72rem;
-    font-weight: 850;
-    margin-bottom: 9px;
-    letter-spacing: 0.5px;
-}
-
-.badge-green {
-    color: #34D399;
-    background: rgba(16,185,129,0.12);
-    border: 1px solid rgba(52,211,153,0.24);
-}
-
-.badge-amber {
-    color: #FBBF24;
-    background: rgba(245,158,11,0.12);
-    border: 1px solid rgba(251,191,36,0.24);
-}
-
-.badge-red {
-    color: #F87171;
-    background: rgba(239,68,68,0.12);
-    border: 1px solid rgba(248,113,113,0.24);
-}
-
-.badge-blue {
-    color: #60A5FA;
-    background: rgba(59,130,246,0.12);
-    border: 1px solid rgba(96,165,250,0.24);
-}
-
-div[data-testid="stDataFrame"] {
-    border-radius: 24px;
-    overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.08);
-}
-
-pre {
-    background: rgba(255,255,255,0.055) !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
-    border-radius: 16px !important;
-    color: #E5E7EB !important;
-}
-
-@keyframes fadeUp {
-    from {
-        opacity: 0;
-        transform: translateY(18px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-</style>
-""",
-    unsafe_allow_html=True,
-)
-
-
-# ==========================================================
-# SIDEBAR
-# ==========================================================
-
-with st.sidebar:
-    st.markdown("## Operations")
-    st.radio(
-        "Navigation",
-        ["Command", "Telemetry", "Threats", "Fleet", "Logs"],
-        label_visibility="collapsed",
-    )
-
-    st.divider()
-
-    st.success("Security Gateway Online")
-    st.info("Zero Trust Enabled")
-    st.caption("mTLS-ready · Replay protection · Telemetry validation")
-
-
-# ==========================================================
-# HERO BANNER
-# ==========================================================
-
-st.markdown(
-    """
-<div class="hero">
-    <div class="main-title">Secure Distributed ICS Security Platform</div>
-    <div class="subtitle">
-        Systems Security Monitoring Console · Operational Technology Security · Telemetry Assurance · Threat Detection
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  unit,
+  trend,
+  tone = "primary",
+}: {
+  icon: typeof Activity;
+  label: string;
+  value: string | number;
+  unit?: string;
+  trend?: string;
+  tone?: "primary" | "success" | "warning" | "critical" | "info";
+}) {
+  const toneClass: Record<string, string> = {
+    primary: "text-primary",
+    success: "text-success",
+    warning: "text-warning",
+    critical: "text-critical",
+    info: "text-info",
+  };
+  return (
+    <div className="panel relative overflow-hidden p-5">
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
+          <div className="mt-2 flex items-baseline gap-1.5">
+            <span className={`font-mono text-3xl font-semibold ${toneClass[tone]}`}>{value}</span>
+            {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
+          </div>
+          {trend && <div className="mt-1 text-xs text-muted-foreground font-mono">{trend}</div>}
+        </div>
+        <div className={`rounded-md border border-border/60 bg-muted/40 p-2 ${toneClass[tone]}`}>
+          <Icon className="h-4 w-4" />
+        </div>
+      </div>
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 -bottom-px h-px"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, color-mix(in oklab, var(--primary) 60%, transparent), transparent)",
+        }}
+      />
     </div>
-    <div class="status-chip">● SYSTEM NOMINAL</div>
-</div>
-""",
-    unsafe_allow_html=True,
-)
+  );
+}
 
+function TelemetryPanel() {
+  const data = useTelemetry();
+  return (
+    <div className="panel p-5">
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h2 className="text-sm font-semibold tracking-wide">Live Telemetry</h2>
+          <p className="text-xs text-muted-foreground">Pressure · Temperature · Flow · Voltage</p>
+        </div>
+        <span className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-2.5 py-1 text-[11px] font-mono text-success">
+          <span className="pulse-dot" /> STREAMING
+        </span>
+      </div>
 
-# ==========================================================
-# PLATFORM STATUS METRICS
-# ==========================================================
+      <div className="h-64 w-full">
+        <ResponsiveContainer>
+          <AreaChart data={data} margin={{ top: 10, right: 8, left: -10, bottom: 0 }}>
+            <defs>
+              <linearGradient id="gPressure" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.45} />
+                <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="gTemp" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--chart-3)" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="var(--chart-3)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="var(--grid)" strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="t" stroke="var(--muted-foreground)" tick={{ fontSize: 10, fontFamily: "var(--font-mono)" }} minTickGap={28} />
+            <YAxis stroke="var(--muted-foreground)" tick={{ fontSize: 10, fontFamily: "var(--font-mono)" }} width={36} />
+            <Tooltip
+              contentStyle={{
+                background: "var(--popover)",
+                border: "1px solid var(--border)",
+                borderRadius: 8,
+                fontFamily: "var(--font-mono)",
+                fontSize: 12,
+              }}
+              labelStyle={{ color: "var(--muted-foreground)" }}
+            />
+            <Area type="monotone" dataKey="pressure" stroke="var(--chart-1)" strokeWidth={2} fill="url(#gPressure)" />
+            <Area type="monotone" dataKey="temperature" stroke="var(--chart-3)" strokeWidth={2} fill="url(#gTemp)" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
 
-st.markdown('<div class="section-title">Mission Status</div>', unsafe_allow_html=True)
+      <div className="mt-2 grid grid-cols-2 gap-3 md:grid-cols-4">
+        {[
+          { label: "Pressure", key: "pressure", unit: "kPa", color: "var(--chart-1)" },
+          { label: "Temp", key: "temperature", unit: "°C", color: "var(--chart-3)" },
+          { label: "Flow", key: "flow", unit: "L/m", color: "var(--chart-2)" },
+          { label: "Voltage", key: "voltage", unit: "V", color: "var(--chart-5)" },
+        ].map((m) => {
+          const last = (data[data.length - 1] ?? {}) as any;
+          return (
+            <div key={m.key} className="rounded-md border border-border/60 bg-muted/30 p-3">
+              <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: m.color }} />
+                {m.label}
+              </div>
+              <div className="mt-1 font-mono text-lg">
+                {last[m.key] ?? "--"}
+                <span className="ml-1 text-xs text-muted-foreground">{m.unit}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
-m1, m2, m3, m4 = st.columns(4)
+function AttackChart() {
+  const data = useTelemetry(28).map((d, i) => ({
+    t: d.t,
+    attempts: Math.max(0, Math.round(8 + Math.sin(i / 2) * 5 + Math.random() * 6)),
+    blocked: Math.max(0, Math.round(6 + Math.sin(i / 2.2) * 4 + Math.random() * 5)),
+  }));
+  return (
+    <div className="panel p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <h2 className="text-sm font-semibold tracking-wide">Attack Surface (24h)</h2>
+          <p className="text-xs text-muted-foreground">Attempts vs blocked</p>
+        </div>
+        <div className="flex items-center gap-3 text-[11px] font-mono text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[var(--critical)]" /> attempts</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[var(--success)]" /> blocked</span>
+        </div>
+      </div>
+      <div className="h-44">
+        <ResponsiveContainer>
+          <LineChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+            <CartesianGrid stroke="var(--grid)" strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="t" stroke="var(--muted-foreground)" tick={{ fontSize: 10, fontFamily: "var(--font-mono)" }} minTickGap={28} />
+            <YAxis stroke="var(--muted-foreground)" tick={{ fontSize: 10, fontFamily: "var(--font-mono)" }} width={28} />
+            <Tooltip
+              contentStyle={{
+                background: "var(--popover)",
+                border: "1px solid var(--border)",
+                borderRadius: 8,
+                fontFamily: "var(--font-mono)",
+                fontSize: 12,
+              }}
+            />
+            <Line dataKey="attempts" stroke="var(--critical)" strokeWidth={2} dot={false} />
+            <Line dataKey="blocked" stroke="var(--success)" strokeWidth={2} dot={false} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
 
-m1.metric("Devices Online", "8", "6/8 active")
-m2.metric("Active Alerts", str(active_alerts), f"{critical_alerts} critical")
-m3.metric("Threats Blocked", "127", "+14")
-m4.metric("System Health", "98%", "+2%")
+function severityStyles(sev: Alert["severity"]) {
+  switch (sev) {
+    case "critical":
+      return { text: "text-critical", bg: "bg-critical/10", border: "border-critical/30", dot: "crit" };
+    case "warning":
+      return { text: "text-warning", bg: "bg-warning/10", border: "border-warning/30", dot: "warn" };
+    default:
+      return { text: "text-info", bg: "bg-info/10", border: "border-info/30", dot: "" };
+  }
+}
 
+function AlertsPanel() {
+  const alerts = useAlerts();
+  return (
+    <div className="panel flex h-full flex-col p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <h2 className="text-sm font-semibold tracking-wide">Security Alerts</h2>
+          <p className="text-xs text-muted-foreground">Real-time event feed</p>
+        </div>
+        <span className="font-mono text-xs text-muted-foreground">{alerts.length} active</span>
+      </div>
+      <div className="-mr-2 max-h-[420px] flex-1 space-y-2 overflow-y-auto pr-2">
+        {alerts.map((a) => {
+          const s = severityStyles(a.severity);
+          return (
+            <div key={a.id} className={`flex items-start gap-3 rounded-md border ${s.border} ${s.bg} p-3`}>
+              <span className={`pulse-dot ${s.dot} mt-1.5`} style={{ color: "currentColor" }} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground">
+                  <span>{a.ts}</span>
+                  <span>·</span>
+                  <span className={`uppercase ${s.text}`}>{a.severity}</span>
+                  <span>·</span>
+                  <span>{a.source}</span>
+                </div>
+                <p className="mt-0.5 truncate text-sm">{a.message}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
-# ==========================================================
-# LIVE TELEMETRY METRICS
-# ==========================================================
+function DeviceRow({ d }: { d: Device }) {
+  const map: Record<Device["status"], { dot: string; label: string; color: string }> = {
+    online: { dot: "", label: "ONLINE", color: "text-success" },
+    degraded: { dot: "warn", label: "DEGRADED", color: "text-warning" },
+    offline: { dot: "crit", label: "OFFLINE", color: "text-critical" },
+  };
+  const s = map[d.status];
+  return (
+    <div className="grid grid-cols-12 items-center gap-2 border-b border-border/60 px-3 py-2.5 text-sm last:border-0 hover:bg-muted/30">
+      <div className="col-span-3 flex items-center gap-2 font-mono">
+        <span className={`pulse-dot ${s.dot}`} /> {d.name}
+      </div>
+      <div className="col-span-2 text-xs text-muted-foreground">{d.type}</div>
+      <div className="col-span-2 text-xs text-muted-foreground">{d.zone}</div>
+      <div className="col-span-2 font-mono text-xs text-muted-foreground">{d.ip}</div>
+      <div className="col-span-2">
+        <div className="h-1.5 w-full rounded-full bg-muted">
+          <div
+            className="h-full rounded-full"
+            style={{
+              width: `${d.load}%`,
+              background:
+                d.load > 75 ? "var(--critical)" : d.load > 55 ? "var(--warning)" : "var(--success)",
+            }}
+          />
+        </div>
+        <div className="mt-1 text-[10px] font-mono text-muted-foreground">{d.load}% load</div>
+      </div>
+      <div className={`col-span-1 text-right text-[11px] font-mono ${s.color}`}>{s.label}</div>
+    </div>
+  );
+}
 
-st.markdown('<div class="section-title">Live Telemetry</div>', unsafe_allow_html=True)
-st.markdown(
-    '<div class="section-subtitle">Latest validated sensor readings from the ICS telemetry pipeline.</div>',
-    unsafe_allow_html=True,
-)
+function DevicesPanel() {
+  const devices = useDevices();
+  return (
+    <div className="panel p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <h2 className="text-sm font-semibold tracking-wide">Operational Status</h2>
+          <p className="text-xs text-muted-foreground">ICS device fleet</p>
+        </div>
+        <div className="flex items-center gap-3 text-[11px] font-mono text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5"><span className="pulse-dot" /> {devices.filter(d => d.status === "online").length} up</span>
+          <span className="inline-flex items-center gap-1.5"><span className="pulse-dot warn" /> {devices.filter(d => d.status === "degraded").length} deg</span>
+          <span className="inline-flex items-center gap-1.5"><span className="pulse-dot crit" /> {devices.filter(d => d.status === "offline").length} down</span>
+        </div>
+      </div>
+      <div className="rounded-md border border-border/60 bg-background/40">
+        <div className="grid grid-cols-12 gap-2 border-b border-border/60 px-3 py-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+          <div className="col-span-3">Device</div>
+          <div className="col-span-2">Type</div>
+          <div className="col-span-2">Zone</div>
+          <div className="col-span-2">IP</div>
+          <div className="col-span-2">Load</div>
+          <div className="col-span-1 text-right">Status</div>
+        </div>
+        {devices.map((d) => <DeviceRow key={d.id} d={d} />)}
+      </div>
+    </div>
+  );
+}
 
-t1, t2, t3 = st.columns(3)
+function AttackFeed() {
+  const events = useAttacks();
+  return (
+    <div className="panel p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold tracking-wide">Attack Monitor</h2>
+        <span className="font-mono text-[11px] text-muted-foreground">last {events.length}</span>
+      </div>
+      <div className="space-y-1.5">
+        {events.slice(0, 8).map((e) => {
+          const s = severityStyles(e.severity as AttackEvent["severity"]);
+          return (
+            <div key={e.id} className="flex items-center gap-3 rounded-md border border-border/50 bg-muted/20 px-3 py-2">
+              <span className="font-mono text-[11px] text-muted-foreground">{e.ts}</span>
+              <span className={`font-mono text-[10px] uppercase ${s.text}`}>{e.severity}</span>
+              <div className="min-w-0 flex-1 truncate text-sm">{e.vector}</div>
+              <span className="hidden font-mono text-[11px] text-muted-foreground md:inline">{e.src} → {e.dst}</span>
+              <span className={`rounded px-1.5 py-0.5 font-mono text-[10px] ${e.blocked ? "bg-success/10 text-success border border-success/30" : "bg-critical/10 text-critical border border-critical/30"}`}>
+                {e.blocked ? "BLOCKED" : "ALLOWED"}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
-t1.metric("Temperature", f"{float(latest['temperature']):.1f} °F", "+0.8")
-t2.metric("Pressure", f"{float(latest['pressure']):.1f} kPa", "+4")
-t3.metric("RPM", f"{int(float(latest['rpm']))}", "+25")
+export function Dashboard() {
+  const now = useClock();
+  const devices = useDevices();
+  const alerts = useAlerts();
+  const attacks = useAttacks();
 
+  const onlinePct = Math.round((devices.filter((d) => d.status === "online").length / devices.length) * 100);
+  const criticalAlerts = alerts.filter((a) => a.severity === "critical").length;
+  const blockedRate = Math.round((attacks.filter((a) => a.blocked).length / Math.max(attacks.length, 1)) * 100);
 
-# ==========================================================
-# TEMPERATURE CHART
-# ==========================================================
+  return (
+    <div className="relative min-h-screen">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-[420px]"
+        style={{ background: "var(--gradient-glow)" }}
+      />
 
-st.markdown('<div class="section-title">Temperature Feed</div>', unsafe_allow_html=True)
+      <div className="relative mx-auto max-w-[1500px] px-6 py-6">
+        {/* Header */}
+        <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="relative grid h-10 w-10 place-items-center rounded-md border border-primary/30 bg-primary/10 text-primary">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Secure Distributed ICS Platform</div>
+              <h1 className="text-lg font-semibold">Operations Command</h1>
+            </div>
+          </div>
 
-temperature_fig = build_line_chart(
-    telemetry_df,
-    "temperature",
-    "Live Temperature Trend",
-    "°F",
-)
+          <div className="flex items-center gap-3">
+            <div className="hidden items-center gap-2 rounded-md border border-border/60 bg-card/60 px-3 py-1.5 text-[11px] font-mono text-muted-foreground md:flex">
+              <Lock className="h-3.5 w-3.5 text-success" /> mTLS · zero-trust
+            </div>
+            <div className="rounded-md border border-border/60 bg-card/60 px-3 py-1.5 font-mono text-xs">
+              <span className="text-muted-foreground">UTC </span>
+              <span>{now ? now.toISOString().slice(11, 19) : "--:--:--"}</span>
+            </div>
+            <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-1.5 text-xs font-mono text-success">
+              <span className="pulse-dot" /> SYSTEM NOMINAL
+            </div>
+          </div>
+        </header>
 
-st.plotly_chart(temperature_fig, use_container_width=True)
+        {/* Stat row */}
+        <section className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+          <StatCard icon={Cpu} label="Devices Online" value={`${onlinePct}%`} trend={`${devices.filter(d=>d.status==='online').length}/${devices.length} up`} tone="success" />
+          <StatCard icon={AlertTriangle} label="Critical Alerts" value={criticalAlerts} unit="open" trend="last 5m" tone={criticalAlerts > 0 ? "critical" : "success"} />
+          <StatCard icon={ShieldCheck} label="Threats Blocked" value={`${blockedRate}%`} trend={`${attacks.filter(a=>a.blocked).length}/${attacks.length} events`} tone="primary" />
+          <StatCard icon={Gauge} label="Throughput" value="1.42" unit="Gb/s" trend="+3.1% vs avg" tone="info" />
+        </section>
 
+        {/* Main grid */}
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="space-y-4 lg:col-span-2">
+            <TelemetryPanel />
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+              <AttackChart />
+              <AttackFeed />
+            </div>
+            <DevicesPanel />
+          </div>
+          <div className="lg:col-span-1">
+            <AlertsPanel />
+          </div>
+        </section>
 
-# ==========================================================
-# PRESSURE CHART
-# ==========================================================
-
-st.markdown('<div class="section-title">Pressure Feed</div>', unsafe_allow_html=True)
-
-pressure_fig = build_line_chart(
-    telemetry_df,
-    "pressure",
-    "Live Pressure Trend",
-    "kPa",
-)
-
-st.plotly_chart(pressure_fig, use_container_width=True)
-
-
-# ==========================================================
-# RPM CHART
-# ==========================================================
-
-st.markdown('<div class="section-title">RPM Feed</div>', unsafe_allow_html=True)
-
-rpm_fig = build_line_chart(
-    telemetry_df,
-    "rpm",
-    "Live RPM Trend",
-    "RPM",
-)
-
-st.plotly_chart(rpm_fig, use_container_width=True)
-
-
-# ==========================================================
-# SECURITY ALERTS + ATTACK ACTIVITY
-# ==========================================================
-
-left_col, right_col = st.columns([1, 1])
-
-with left_col:
-    st.markdown('<div class="section-title">Security Events</div>', unsafe_allow_html=True)
-
-    st.markdown(
-        """
-<div class="glass-card">
-    <div class="badge badge-green">INFO</div>
-    <div class="card-title">Authentication validation successful</div>
-    <div class="card-body">Security Gateway accepted trusted telemetry source.</div>
-</div>
-
-<div class="glass-card">
-    <div class="badge badge-amber">MEDIUM</div>
-    <div class="card-title">Sensor drift observed</div>
-    <div class="card-body">Pressure telemetry deviated from recent baseline.</div>
-</div>
-
-<div class="glass-card">
-    <div class="badge badge-red">CRITICAL</div>
-    <div class="card-title">Replay attack blocked</div>
-    <div class="card-body">Stale telemetry packet rejected by replay protection.</div>
-</div>
-""",
-        unsafe_allow_html=True,
-    )
-
-with right_col:
-    st.markdown('<div class="section-title">Attack Activity</div>', unsafe_allow_html=True)
-
-    attack_df = pd.DataFrame({
-        "Attack Type": ["Spoofing", "Replay", "Tampering", "Flooding"],
-        "Events": [4, 2, 3, 1],
-        "Status": ["Blocked", "Blocked", "Blocked", "Observed"],
-    })
-
-    st.dataframe(
-        attack_df,
-        use_container_width=True,
-        hide_index=True,
-    )
-
-
-# ==========================================================
-# RECENT SECURITY EVENTS
-# ==========================================================
-
-st.markdown('<div class="section-title">Recent Security Events</div>', unsafe_allow_html=True)
-
-if logs:
-    for log in reversed(logs):
-        sev = severity_class(log)
-
-        if sev == "critical":
-            badge = "badge-red"
-            label = "CRITICAL"
-        elif sev == "high":
-            badge = "badge-amber"
-            label = "HIGH"
-        elif sev == "medium":
-            badge = "badge-amber"
-            label = "MEDIUM"
-        elif sev == "low":
-            badge = "badge-blue"
-            label = "LOW"
-        else:
-            badge = "badge-green"
-            label = "INFO"
-
-        st.markdown(
-            f"""
-<div class="glass-card">
-    <div class="badge {badge}">{label}</div>
-    <div class="card-body">{log.strip()}</div>
-</div>
-""",
-            unsafe_allow_html=True,
-        )
-else:
-    st.markdown(
-        """
-<div class="glass-card">
-    <div class="badge badge-blue">INFO</div>
-    <div class="card-title">No security events found</div>
-    <div class="card-body">Waiting for system logs from the detection pipeline.</div>
-</div>
-""",
-        unsafe_allow_html=True,
-    )
-
-
-# ==========================================================
-# FOOTER
-# ==========================================================
-
-st.divider()
-
-st.caption(
-    "Secure Distributed ICS Platform · Systems Security Engineering Project · OT Security · Telemetry Assurance"
-)
+        {/* Footer */}
+        <footer className="mt-8 flex items-center justify-between border-t border-border/60 pt-4 text-[11px] font-mono text-muted-foreground">
+          <div className="flex items-center gap-3">
+            <Wifi className="h-3.5 w-3.5 text-success" /> ingest stream: ws://ics-gateway/telemetry
+          </div>
+          <div className="flex items-center gap-3">
+            <Radio className="h-3.5 w-3.5 text-primary" /> Modbus · DNP3 · OPC-UA
+            <span>·</span>
+            <Activity className="h-3.5 w-3.5 text-success" /> uptime 99.982%
+          </div>
+        </footer>
+      </div>
+    </div>
+  );
+}
