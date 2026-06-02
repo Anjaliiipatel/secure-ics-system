@@ -195,6 +195,19 @@ else:
 latest = telemetry_df.iloc[-1]
 logs = load_logs()
 
+latest_log = logs[-1] if logs else ""
+
+previous_latest_log = st.session_state.get(
+    "previous_latest_log",
+    ""
+)
+
+new_event_detected = (
+    latest_log != previous_latest_log
+)
+
+st.session_state["previous_latest_log"] = latest_log
+
 critical_logs = [
     log for log in logs
     if "CRITICAL" in log.upper()
@@ -345,16 +358,6 @@ html, body, [class*="css"] {
     animation: pulse 1.4s infinite;
 }
 
-.warn-dot {
-    background: #F59E0B;
-    box-shadow: 0 0 12px rgba(245,158,11,.85);
-}
-
-.crit-dot {
-    background: #EF4444;
-    box-shadow: 0 0 12px rgba(239,68,68,.85);
-}
-
 .telemetry-mini {
     background: rgba(255,255,255,.035);
     border: 1px solid rgba(255,255,255,.07);
@@ -386,6 +389,16 @@ html, body, [class*="css"] {
     animation: slideIn .45s ease;
 }
 
+.live-new-event {
+    background: rgba(16,185,129,.10);
+    border: 1px solid rgba(16,185,129,.45);
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 10px;
+    animation: liveSlideIn .55s ease, livePulse 1.2s ease;
+    box-shadow: 0 0 24px rgba(16,185,129,.30);
+}
+
 .badge {
     display: inline-block;
     border-radius: 999px;
@@ -406,18 +419,14 @@ html, body, [class*="css"] {
     color: #F59E0B;
     background: rgba(245,158,11,.12);
     border: 1px solid rgba(245,158,11,.25);
-
-    box-shadow:
-        0 0 14px rgba(245,158,11,.25);
+    box-shadow: 0 0 14px rgba(245,158,11,.25);
 }
 
 .critical {
     color: #EF4444;
     background: rgba(239,68,68,.12);
     border: 1px solid rgba(239,68,68,.25);
-
-    box-shadow:
-        0 0 18px rgba(239,68,68,.35);
+    box-shadow: 0 0 18px rgba(239,68,68,.35);
 }
 
 .success {
@@ -428,6 +437,32 @@ html, body, [class*="css"] {
 
 .muted {
     color: #94A3B8;
+}
+
+@keyframes liveSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(28px) scale(.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0px) scale(1);
+    }
+}
+
+@keyframes livePulse {
+    0% {
+        box-shadow: 0 0 0 rgba(16,185,129,0);
+    }
+
+    50% {
+        box-shadow: 0 0 28px rgba(16,185,129,.45);
+    }
+
+    100% {
+        box-shadow: 0 0 12px rgba(16,185,129,.18);
+    }
 }
 
 @keyframes fadeUp {
@@ -446,9 +481,8 @@ html, body, [class*="css"] {
     50% { opacity: 1; }
     100% { opacity: .55; }
 }
-            
-@keyframes slideIn {
 
+@keyframes slideIn {
     from {
         opacity: 0;
         transform: translateX(20px);
@@ -496,26 +530,10 @@ st.markdown("<br>", unsafe_allow_html=True)
 c1, c2, c3, c4 = st.columns(4)
 
 cards = [
-    (
-        "Packets Received",
-        gateway_stats["packets_received"],
-        "Gateway"
-    ),
-    (
-        "Packets Accepted",
-        gateway_stats["packets_accepted"],
-        "Validated"
-    ),
-    (
-        "Packets Rejected",
-        gateway_stats["packets_rejected"],
-        "Blocked"
-    ),
-    (
-        "Replay Attacks",
-        gateway_stats["replay_attacks_blocked"],
-        "Detected"
-    ),
+    ("Packets Received", gateway_stats["packets_received"], "Gateway"),
+    ("Packets Accepted", gateway_stats["packets_accepted"], "Validated"),
+    ("Packets Rejected", gateway_stats["packets_rejected"], "Blocked"),
+    ("Replay Attacks", gateway_stats["replay_attacks_blocked"], "Detected"),
 ]
 
 for col, (label, value, trend) in zip([c1, c2, c3, c4], cards):
@@ -615,24 +633,50 @@ with main_left:
         st.markdown("""
         <div class="panel">
             <div class="section-title">Attack Monitor</div>
-            <div class="section-subtitle">Recent security activity</div>
+            <div class="section-subtitle">Live security activity feed</div>
         """, unsafe_allow_html=True)
 
-        recent_security_events = logs[-8:]
+        recent_security_events = logs[-6:]
 
         if recent_security_events:
-            for event in reversed(recent_security_events):
+            for index, event in enumerate(reversed(recent_security_events)):
+                upper = event.upper()
+
+                if "CRITICAL" in upper or "REPLAY" in upper:
+                    badge = "critical"
+                    label = "LIVE CRITICAL"
+                elif "HIGH" in upper or "ANOMALY" in upper:
+                    badge = "warning"
+                    label = "LIVE ALERT"
+                elif "ACCEPTED" in upper or "VALIDATED" in upper:
+                    badge = "success"
+                    label = "VALIDATED"
+                else:
+                    badge = "info"
+                    label = "EVENT"
+
+                live_class = (
+                    "live-new-event"
+                    if index == 0 and new_event_detected
+                    else "alert-card"
+                )
+
                 st.markdown(f"""
-                <div class="alert-card">
-                    <span class="badge info">EVENT</span><br>
-                    <span class="muted">{event.strip()}</span>
+                <div class="{live_class}">
+                    <span class="badge {badge}">
+                        {label}
+                    </span><br>
+                    <span class="muted">
+                        {event.strip()}
+                    </span>
                 </div>
                 """, unsafe_allow_html=True)
+
         else:
             st.markdown("""
             <div class="alert-card">
                 <span class="badge info">INFO</span><br>
-                <span class="muted">No security events detected.</span>
+                <span class="muted">Waiting for live security events.</span>
             </div>
             """, unsafe_allow_html=True)
 
@@ -698,25 +742,10 @@ with main_left:
 
     m1, m2, m3, m4 = st.columns(4)
 
-    m1.metric(
-        "Anomalies",
-        gateway_stats["anomalies_detected"]
-    )
-
-    m2.metric(
-        "Replay Attacks",
-        gateway_stats["replay_attacks_blocked"]
-    )
-
-    m3.metric(
-        "Rejected Packets",
-        gateway_stats["packets_rejected"]
-    )
-
-    m4.metric(
-        "Accepted Packets",
-        gateway_stats["packets_accepted"]
-    )
+    m1.metric("Anomalies", gateway_stats["anomalies_detected"])
+    m2.metric("Replay Attacks", gateway_stats["replay_attacks_blocked"])
+    m3.metric("Rejected Packets", gateway_stats["packets_rejected"])
+    m4.metric("Accepted Packets", gateway_stats["packets_accepted"])
 
 
 with main_right:
@@ -743,7 +772,9 @@ with main_right:
             st.markdown(f"""
             <div class="alert-card">
                 <span class="badge {badge}">{label}</span><br>
-                <span class="muted">{log.strip()}</span>
+                <span class="muted">
+                    {log.strip()}
+                </span>
             </div>
             """, unsafe_allow_html=True)
     else:
