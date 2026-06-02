@@ -1,4 +1,5 @@
 import json
+import html
 import random
 from datetime import datetime, timezone
 from pathlib import Path
@@ -667,7 +668,7 @@ with main_left:
                         {label}
                     </span><br>
                     <span class="muted">
-                        {event.strip()}
+                        {html.escape(event.strip())}
                     </span>
                 </div>
                 """, unsafe_allow_html=True)
