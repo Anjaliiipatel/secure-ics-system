@@ -1,165 +1,289 @@
 import statistics
 import time
-
-# Store recent telemetry history
-telemetry_history = {
-    "temperature": [],
-    "pressure": [],
-    "rpm": []
-}
-
-# Maximum history length
-MAX_HISTORY = 20
+from pathlib import Path
 
 
-def log_alert(alert):
-    """
-    Write alert to centralized log file.
-    """
+BASE_DIR = Path(__file__).resolve().parents[1]
+LOG_FILE = BASE_DIR / "logs" / "system_logs.txt"
 
-    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
 
-    with open("../logs/system_logs.txt", "a") as log_file:
-        log_file.write(
-            f"{timestamp} | "
-            f"{alert['severity']} | "
-            f"{alert['alert_type']} | "
-            f"{alert['description']}\n"
+class AnomalyDetector:
+
+    # =====================================================
+    # CONFIGURATION
+    # =====================================================
+
+    TEMPERATURE_MAX = 95
+    PRESSURE_MIN = 20
+    RPM_MAX = 5000
+
+    TEMP_DEVIATION_THRESHOLD = 20
+    PRESSURE_DEVIATION_THRESHOLD = 10
+    RPM_DEVIATION_THRESHOLD = 2000
+
+    MAX_HISTORY = 20
+
+    # =====================================================
+    # INITIALIZATION
+    # =====================================================
+
+    def __init__(self):
+
+        self.telemetry_history = {
+            "temperature": [],
+            "pressure": [],
+            "rpm": []
+        }
+
+        self.stats = {
+            "total_packets": 0,
+            "alerts_generated": 0
+        }
+
+    # =====================================================
+    # LOGGING
+    # =====================================================
+
+    def log_alert(self, alert):
+
+        timestamp = time.strftime(
+            "%Y-%m-%d %H:%M:%S"
         )
 
+        with open(LOG_FILE, "a") as log_file:
 
-def classify_severity(alert_type):
-    """
-    Assign severity classification.
-    """
-
-    severity_map = {
-        "Telemetry Anomaly": "HIGH",
-        "Replay Attack": "HIGH",
-        "Flooding Attack": "CRITICAL",
-        "Integrity Failure": "CRITICAL",
-        "Authentication Failure": "MEDIUM"
-    }
-
-    return severity_map.get(alert_type, "LOW")
-
-
-def threshold_detection(telemetry):
-    """
-    Detect impossible or dangerous telemetry values.
-    """
-
-    alerts = []
-
-    if telemetry["temperature"] > 95:
-        alerts.append({
-            "alert_type": "Telemetry Anomaly",
-            "severity": classify_severity("Telemetry Anomaly"),
-            "description": (
-                f"Abnormal temperature detected: "
-                f"{telemetry['temperature']}"
+            log_file.write(
+                f"{timestamp} | "
+                f"{alert['severity']} | "
+                f"{alert['alert_type']} | "
+                f"{alert['description']}\n"
             )
-        })
 
-    if telemetry["pressure"] < 20:
-        alerts.append({
-            "alert_type": "Telemetry Anomaly",
-            "severity": classify_severity("Telemetry Anomaly"),
-            "description": (
-                f"Abnormal pressure detected: "
-                f"{telemetry['pressure']}"
-            )
-        })
+    # =====================================================
+    # SEVERITY CLASSIFICATION
+    # =====================================================
 
-    if telemetry["rpm"] > 5000:
-        alerts.append({
-            "alert_type": "Telemetry Anomaly",
-            "severity": classify_severity("Telemetry Anomaly"),
-            "description": (
-                f"Abnormal RPM detected: "
-                f"{telemetry['rpm']}"
-            )
-        })
+    def classify_severity(self, alert_type):
 
-    return alerts
+        severity_map = {
+            "Telemetry Anomaly": "HIGH",
+            "Replay Attack": "HIGH",
+            "Flooding Attack": "CRITICAL",
+            "Integrity Failure": "CRITICAL",
+            "Authentication Failure": "MEDIUM"
+        }
 
+        return severity_map.get(
+            alert_type,
+            "LOW"
+        )
 
-def behavioral_detection(telemetry):
-    """
-    Compare telemetry against recent operational history.
-    """
+    # =====================================================
+    # THRESHOLD DETECTION
+    # =====================================================
 
-    alerts = []
+    def threshold_detection(self, telemetry):
 
-    # Add telemetry to history
-    telemetry_history["temperature"].append(telemetry["temperature"])
-    telemetry_history["pressure"].append(telemetry["pressure"])
-    telemetry_history["rpm"].append(telemetry["rpm"])
+        alerts = []
 
-    # Limit history size
-    for key in telemetry_history:
-        if len(telemetry_history[key]) > MAX_HISTORY:
-            telemetry_history[key].pop(0)
+        if telemetry["temperature"] > self.TEMPERATURE_MAX:
 
-    # Only analyze if enough history exists
-    if len(telemetry_history["temperature"]) < 5:
+            alerts.append({
+                "alert_type": "Telemetry Anomaly",
+                "severity": self.classify_severity(
+                    "Telemetry Anomaly"
+                ),
+                "description":
+                    f"Abnormal temperature detected: "
+                    f"{telemetry['temperature']}"
+            })
+
+        if telemetry["pressure"] < self.PRESSURE_MIN:
+
+            alerts.append({
+                "alert_type": "Telemetry Anomaly",
+                "severity": self.classify_severity(
+                    "Telemetry Anomaly"
+                ),
+                "description":
+                    f"Abnormal pressure detected: "
+                    f"{telemetry['pressure']}"
+            })
+
+        if telemetry["rpm"] > self.RPM_MAX:
+
+            alerts.append({
+                "alert_type": "Telemetry Anomaly",
+                "severity": self.classify_severity(
+                    "Telemetry Anomaly"
+                ),
+                "description":
+                    f"Abnormal RPM detected: "
+                    f"{telemetry['rpm']}"
+            })
+
         return alerts
 
-    temp_avg = statistics.mean(telemetry_history["temperature"])
-    pressure_avg = statistics.mean(telemetry_history["pressure"])
-    rpm_avg = statistics.mean(telemetry_history["rpm"])
+    # =====================================================
+    # HISTORY MANAGEMENT
+    # =====================================================
 
-    # Temperature deviation
-    if abs(telemetry["temperature"] - temp_avg) > 20:
-        alerts.append({
-            "alert_type": "Telemetry Anomaly",
-            "severity": "HIGH",
-            "description": (
-                f"Behavioral temperature deviation detected. "
-                f"Current: {telemetry['temperature']} | "
-                f"Average: {round(temp_avg, 2)}"
+    def update_history(self, telemetry):
+
+        self.telemetry_history["temperature"].append(
+            telemetry["temperature"]
+        )
+
+        self.telemetry_history["pressure"].append(
+            telemetry["pressure"]
+        )
+
+        self.telemetry_history["rpm"].append(
+            telemetry["rpm"]
+        )
+
+        for key in self.telemetry_history:
+
+            if len(self.telemetry_history[key]) > self.MAX_HISTORY:
+
+                self.telemetry_history[key].pop(0)
+
+    # =====================================================
+    # BEHAVIORAL DETECTION
+    # =====================================================
+
+    def behavioral_detection(self, telemetry):
+
+        alerts = []
+
+        self.update_history(
+            telemetry
+        )
+
+        if len(
+            self.telemetry_history["temperature"]
+        ) < 5:
+
+            return alerts
+
+        temp_avg = statistics.mean(
+            self.telemetry_history["temperature"]
+        )
+
+        pressure_avg = statistics.mean(
+            self.telemetry_history["pressure"]
+        )
+
+        rpm_avg = statistics.mean(
+            self.telemetry_history["rpm"]
+        )
+
+        if abs(
+            telemetry["temperature"] - temp_avg
+        ) > self.TEMP_DEVIATION_THRESHOLD:
+
+            alerts.append({
+                "alert_type": "Telemetry Anomaly",
+                "severity": "HIGH",
+                "description":
+                    f"Temperature deviation detected. "
+                    f"Current={telemetry['temperature']} "
+                    f"Average={round(temp_avg,2)}"
+            })
+
+        if abs(
+            telemetry["pressure"] - pressure_avg
+        ) > self.PRESSURE_DEVIATION_THRESHOLD:
+
+            alerts.append({
+                "alert_type": "Telemetry Anomaly",
+                "severity": "HIGH",
+                "description":
+                    f"Pressure deviation detected. "
+                    f"Current={telemetry['pressure']} "
+                    f"Average={round(pressure_avg,2)}"
+            })
+
+        if abs(
+            telemetry["rpm"] - rpm_avg
+        ) > self.RPM_DEVIATION_THRESHOLD:
+
+            alerts.append({
+                "alert_type": "Telemetry Anomaly",
+                "severity": "HIGH",
+                "description":
+                    f"RPM deviation detected. "
+                    f"Current={telemetry['rpm']} "
+                    f"Average={round(rpm_avg,2)}"
+            })
+
+        return alerts
+
+    # =====================================================
+    # MAIN ANALYSIS PIPELINE
+    # =====================================================
+
+    def analyze(self, telemetry):
+
+        self.stats["total_packets"] += 1
+
+        alerts = []
+
+        alerts.extend(
+            self.threshold_detection(
+                telemetry
             )
-        })
+        )
 
-    # Pressure deviation
-    if abs(telemetry["pressure"] - pressure_avg) > 10:
-        alerts.append({
-            "alert_type": "Telemetry Anomaly",
-            "severity": "HIGH",
-            "description": (
-                f"Behavioral pressure deviation detected. "
-                f"Current: {telemetry['pressure']} | "
-                f"Average: {round(pressure_avg, 2)}"
+        alerts.extend(
+            self.behavioral_detection(
+                telemetry
             )
-        })
+        )
 
-    # RPM deviation
-    if abs(telemetry["rpm"] - rpm_avg) > 2000:
-        alerts.append({
-            "alert_type": "Telemetry Anomaly",
-            "severity": "HIGH",
-            "description": (
-                f"Behavioral RPM deviation detected. "
-                f"Current: {telemetry['rpm']} | "
-                f"Average: {round(rpm_avg, 2)}"
-            )
-        })
+        self.stats["alerts_generated"] += len(
+            alerts
+        )
 
-    return alerts
+        for alert in alerts:
+            self.log_alert(alert)
+
+        return alerts
+
+    # =====================================================
+    # DASHBOARD METRICS
+    # =====================================================
+
+    def get_stats(self):
+
+        return self.stats
 
 
-def analyze_telemetry(telemetry):
-    """
-    Run all telemetry detection checks.
-    """
+# =====================================================
+# TESTING
+# =====================================================
 
-    alerts = []
+if __name__ == "__main__":
 
-    alerts.extend(threshold_detection(telemetry))
-    alerts.extend(behavioral_detection(telemetry))
+    detector = AnomalyDetector()
 
-    # Log alerts
+    sample_packet = {
+        "temperature": 120,
+        "pressure": 10,
+        "rpm": 7000
+    }
+
+    alerts = detector.analyze(
+        sample_packet
+    )
+
+    print("\nAlerts Generated:\n")
+
     for alert in alerts:
-        log_alert(alert)
+        print(alert)
 
-    return alerts
+    print("\nStatistics:\n")
+
+    print(
+        detector.get_stats()
+    )
