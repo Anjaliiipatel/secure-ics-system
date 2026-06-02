@@ -178,6 +178,30 @@ critical_logs = [log for log in logs if "CRITICAL" in log.upper()]
 online_pct = 75
 blocked_rate = 97
 
+# =========================
+# Security Gateway Metrics
+# =========================
+
+gateway_stats = {
+    "packets_received": len(telemetry_df),
+    "packets_accepted": max(
+        len(telemetry_df) - len(critical_logs),
+        0
+    ),
+    "packets_rejected": len(critical_logs),
+
+    "replay_attacks_blocked": len([
+        log
+        for log in logs
+        if "REPLAY" in log.upper()
+    ]),
+
+    "anomalies_detected": len([
+        log
+        for log in logs
+        if "ANOMALY" in log.upper()
+    ])
+}
 
 # =========================
 # CSS
@@ -458,10 +482,29 @@ st.markdown("<br>", unsafe_allow_html=True)
 c1, c2, c3, c4 = st.columns(4)
 
 cards = [
-    ("Devices Online", f"{online_pct}%", "6/8 up"),
-    ("Critical Alerts", len(critical_logs), "last 5m"),
-    ("Threats Blocked", f"{blocked_rate}%", "127/131 events"),
-    ("Throughput", "1.42", "Gb/s  +3.1%"),
+    (
+        "Packets Received",
+        gateway_stats["packets_received"],
+        "Gateway"
+    ),
+
+    (
+        "Packets Accepted",
+        gateway_stats["packets_accepted"],
+        "Validated"
+    ),
+
+    (
+        "Packets Rejected",
+        gateway_stats["packets_rejected"],
+        "Blocked"
+    ),
+
+    (
+        "Replay Attacks",
+        gateway_stats["replay_attacks_blocked"],
+        "Detected"
+    ),
 ]
 
 for col, (label, value, trend) in zip([c1, c2, c3, c4], cards):
@@ -475,7 +518,30 @@ for col, (label, value, trend) in zip([c1, c2, c3, c4], cards):
         """, unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
+# =========================
+# Security Gateway Status
+# =========================
 
+st.markdown("""
+<div class="panel">
+    <div class="section-title">
+        Security Gateway Status
+    </div>
+
+    <div class="section-subtitle">
+        Telemetry Validation Layer
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+g1, g2, g3, g4 = st.columns(4)
+
+g1.success("Validator ✓")
+g2.success("Replay Detector ✓")
+g3.success("Anomaly Detector ✓")
+g4.success("Authentication ✓")
+
+st.markdown("<br>", unsafe_allow_html=True)
 
 # =========================
 # Main Content
@@ -527,19 +593,19 @@ with main_left:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-    with a2:
-        st.markdown("""
-        <div class="panel">
-            <div class="section-title">Attack Monitor</div>
-            <div class="section-subtitle">Recent adversarial validation events</div>
-            <div class="alert-card"><span class="badge critical">CRITICAL</span><br>Replay vector blocked · sensor gateway</div>
-            <div class="alert-card"><span class="badge warning">WARNING</span><br>Telemetry drift observed · pressure channel</div>
-            <div class="alert-card"><span class="badge success">BLOCKED</span><br>Spoofing attempt rejected · TEMP_01</div>
-            <div class="alert-card"><span class="badge info">INFO</span><br>Integrity validation successful · signed packet</div>
-        </div>
-        """, unsafe_allow_html=True)
+    recent_security_events = logs[-4:]
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    for event in reversed(recent_security_events):
+
+        st.markdown(f"""
+        <div class="alert-card">
+            <span class="badge info">
+                EVENT
+            </span><br>
+
+            {event.strip()}
+        </div>
+        """, unsafe_allow_html=True)    
 # ==========================================================
 # OPERATIONAL STATUS
 # ==========================================================
@@ -621,6 +687,40 @@ with main_right:
         """, unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
+# =========================
+# Security Metrics
+# =========================
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+st.markdown("""
+<div class="panel">
+    <div class="section-title">
+        Security Metrics
+    </div>
+
+    <div class="section-subtitle">
+        Gateway Performance
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+m1, m2, m3 = st.columns(3)
+
+m1.metric(
+    "Anomalies",
+    gateway_stats["anomalies_detected"]
+)
+
+m2.metric(
+    "Replay Attacks",
+    gateway_stats["replay_attacks_blocked"]
+)
+
+m3.metric(
+    "Rejected Packets",
+    gateway_stats["packets_rejected"]
+)
 
 
 # =========================
