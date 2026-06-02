@@ -20,7 +20,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-st_autorefresh(interval=1000, key="live_dashboard_refresh")
+st_autorefresh(
+    interval=500,
+    key="live_dashboard_refresh"
+)
 
 
 # =========================
@@ -380,6 +383,7 @@ html, body, [class*="css"] {
     border-radius: 14px;
     padding: 12px;
     margin-bottom: 10px;
+    animation: slideIn .45s ease;
 }
 
 .badge {
@@ -402,12 +406,18 @@ html, body, [class*="css"] {
     color: #F59E0B;
     background: rgba(245,158,11,.12);
     border: 1px solid rgba(245,158,11,.25);
+
+    box-shadow:
+        0 0 14px rgba(245,158,11,.25);
 }
 
 .critical {
     color: #EF4444;
     background: rgba(239,68,68,.12);
     border: 1px solid rgba(239,68,68,.25);
+
+    box-shadow:
+        0 0 18px rgba(239,68,68,.35);
 }
 
 .success {
@@ -436,6 +446,19 @@ html, body, [class*="css"] {
     50% { opacity: 1; }
     100% { opacity: .55; }
 }
+            
+@keyframes slideIn {
+
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0px);
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -459,6 +482,7 @@ with right:
     <div style="display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
         <div class="top-chip">UTC {utc_now}</div>
         <div class="top-chip nominal"><span class="status-dot"></span> SYSTEM NOMINAL</div>
+        <div class="top-chip">⚡ LIVE TELEMETRY</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -594,7 +618,7 @@ with main_left:
             <div class="section-subtitle">Recent security activity</div>
         """, unsafe_allow_html=True)
 
-        recent_security_events = logs[-4:]
+        recent_security_events = logs[-8:]
 
         if recent_security_events:
             for event in reversed(recent_security_events):
