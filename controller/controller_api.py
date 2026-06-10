@@ -1,15 +1,86 @@
-from flask import request, jsonify, Blueprint
+from flask import Blueprint, request, jsonify
+from pathlib import Path
+import json
 
 from security.gateway import SecurityGateway
 
+# =====================================================
+# CONFIGURATION
+# =====================================================
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+
+TELEMETRY_FILE = (
+    BASE_DIR /
+    "logs" /
+    "telemetry.json"
+)
+
+# =====================================================
+# TELEMETRY STORAGE
+# =====================================================
+
+def save_telemetry(packet):
+
+    try:
+
+        if TELEMETRY_FILE.exists():
+
+            with open(
+                TELEMETRY_FILE,
+                "r"
+            ) as file:
+
+                try:
+                    data = json.load(file)
+                except json.JSONDecodeError:
+                    data = []
+
+        else:
+
+            data = []
+
+        data.append(packet)
+
+        # Keep most recent 100 packets
+
+        data = data[-100:]
+
+        with open(
+            TELEMETRY_FILE,
+            "w"
+        ) as file:
+
+            json.dump(
+                data,
+                file,
+                indent=4
+            )
+
+    except Exception as e:
+
+        print(
+            f"Telemetry Storage Error: {e}"
+        )
+
+# =====================================================
+# FLASK BLUEPRINT
+# =====================================================
 
 telemetry_bp = Blueprint(
     "telemetry",
     __name__
 )
 
+# =====================================================
+# SECURITY GATEWAY
+# =====================================================
+
 security_gateway = SecurityGateway()
 
+# =====================================================
+# ROUTES
+# =====================================================
 
 @telemetry_bp.route(
     "/telemetry",
@@ -21,8 +92,9 @@ def receive_telemetry():
     POST /telemetry
 
     Receives telemetry packets,
-    runs them through the Security Gateway,
-    and returns the security result.
+    processes them through the
+    Security Gateway,
+    and stores accepted packets.
     """
 
     data = request.get_json()
@@ -30,13 +102,15 @@ def receive_telemetry():
     if not data:
 
         return jsonify({
-            "error":
-            "No telemetry data provided"
+            "status": "error",
+            "message": "No telemetry data provided"
         }), 400
 
     try:
 
-        # Signature supplied by sender
+        # =============================================
+        # Retrieve Signature
+        # =============================================
 
         signature = data.get(
             "signature"
@@ -45,11 +119,13 @@ def receive_telemetry():
         if not signature:
 
             return jsonify({
-                "error":
-                "Missing telemetry signature"
+                "status": "error",
+                "message": "Missing telemetry signature"
             }), 400
 
-        # Remove signature before validation
+        # =============================================
+        # Remove Signature Before Validation
+        # =============================================
 
         packet = data.copy()
 
@@ -58,6 +134,10 @@ def receive_telemetry():
             None
         )
 
+        # =============================================
+        # Security Gateway Processing
+        # =============================================
+
         result = (
             security_gateway.process_packet(
                 packet,
@@ -65,26 +145,40 @@ def receive_telemetry():
             )
         )
 
+        # =============================================
+        # Rejected Packet
+        # =============================================
+
         if result["status"] == "REJECTED":
 
             return jsonify({
-                "status":
-                "rejected",
+
+                "status": "rejected",
 
                 "reason":
                 result["reason"]
+
             }), 403
+
+        # =============================================
+        # Store Accepted Packet
+        # =============================================
+
+        save_telemetry(packet)
+
+        # =============================================
+        # Successful Response
+        # =============================================
 
         return jsonify({
 
-            "status":
-            "accepted",
+            "status": "accepted",
 
             "alerts":
             result["alerts"],
 
             "packet":
-            result["packet"]
+            packet
 
         }), 200
 
@@ -92,8 +186,7 @@ def receive_telemetry():
 
         return jsonify({
 
-            "status":
-            "error",
+            "status": "error",
 
             "details":
             str(e)
