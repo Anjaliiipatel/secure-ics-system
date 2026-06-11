@@ -5,6 +5,7 @@ import time
 from security.validation import TelemetryValidator
 from security.replay_detection import ReplayDetector
 from security.anomaly_detection import AnomalyDetector
+from security.sensor_registry import SensorRegistry
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -15,7 +16,9 @@ class SecurityGateway:
 
     def __init__(self):
 
+        # =============================================
         # Security Components
+        # =============================================
 
         self.validator = TelemetryValidator(
             "super_secret_aerospace_key"
@@ -25,7 +28,11 @@ class SecurityGateway:
 
         self.anomaly_detector = AnomalyDetector()
 
+        self.sensor_registry = SensorRegistry()
+
+        # =============================================
         # Gateway Statistics
+        # =============================================
 
         self.stats = {
             "packets_received": 0,
@@ -33,7 +40,8 @@ class SecurityGateway:
             "packets_rejected": 0,
             "replay_attacks_blocked": 0,
             "integrity_failures": 0,
-            "anomalies_detected": 0
+            "anomalies_detected": 0,
+            "unauthorized_sensors_blocked": 0
         }
 
     # =====================================================
@@ -74,7 +82,7 @@ class SecurityGateway:
 
         # ---------------------------------------------
         # STEP 1
-        # Validate packet
+        # Signature & Packet Validation
         # ---------------------------------------------
 
         valid, message = self.validator.validate_packet(
@@ -100,6 +108,38 @@ class SecurityGateway:
 
         # ---------------------------------------------
         # STEP 2
+        # Sensor Authentication
+        # ---------------------------------------------
+
+        sensor_id = packet.get(
+            "sensor_id"
+        )
+
+        if not self.sensor_registry.is_authorized(
+            sensor_id
+        ):
+
+            self.stats[
+                "packets_rejected"
+            ] += 1
+
+            self.stats[
+                "unauthorized_sensors_blocked"
+            ] += 1
+
+            self.log_event(
+                "HIGH",
+                "Unauthorized Sensor",
+                f"Unauthorized device attempted communication: {sensor_id}"
+            )
+
+            return {
+                "status": "REJECTED",
+                "reason": "Unauthorized Sensor"
+            }
+
+        # ---------------------------------------------
+        # STEP 3
         # Replay Detection
         # ---------------------------------------------
 
@@ -131,19 +171,22 @@ class SecurityGateway:
             }
 
         # ---------------------------------------------
-        # STEP 3
+        # STEP 4
         # Anomaly Detection
         # ---------------------------------------------
 
         telemetry = {
+
             "temperature": packet.get(
                 "temperature",
-                packet.get("value", 0)
+                0
             ),
+
             "pressure": packet.get(
                 "pressure",
                 0
             ),
+
             "rpm": packet.get(
                 "rpm",
                 0
@@ -160,8 +203,16 @@ class SecurityGateway:
                 "anomalies_detected"
             ] += len(alerts)
 
+            for alert in alerts:
+
+                self.log_event(
+                    alert["severity"],
+                    alert["alert_type"],
+                    alert["description"]
+                )
+
         # ---------------------------------------------
-        # STEP 4
+        # STEP 5
         # Accept Packet
         # ---------------------------------------------
 
@@ -176,8 +227,11 @@ class SecurityGateway:
         )
 
         return {
+
             "status": "ACCEPTED",
+
             "alerts": alerts,
+
             "packet": packet
         }
 
@@ -189,6 +243,23 @@ class SecurityGateway:
 
         return self.stats
 
+    # =====================================================
+    # RESET STATS
+    # =====================================================
+
+    def reset_stats(self):
+
+        self.stats = {
+
+            "packets_received": 0,
+            "packets_accepted": 0,
+            "packets_rejected": 0,
+            "replay_attacks_blocked": 0,
+            "integrity_failures": 0,
+            "anomalies_detected": 0,
+            "unauthorized_sensors_blocked": 0
+        }
+
 
 # =====================================================
 # TESTING
@@ -199,16 +270,22 @@ if __name__ == "__main__":
     gateway = SecurityGateway()
 
     packet = {
+
         "sensor_id": "temp_01",
-        "value": 72,
+
         "temperature": 72,
+
         "pressure": 410,
+
         "rpm": 1500,
+
         "timestamp": time.time()
     }
 
-    signature = gateway.validator.generate_signature(
-        packet
+    signature = (
+        gateway.validator.generate_signature(
+            packet
+        )
     )
 
     result = gateway.process_packet(
