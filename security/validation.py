@@ -1,34 +1,29 @@
 import hashlib
 import hmac
 import json
-import time
 
 
 class TelemetryValidator:
 
-    AUTHORIZED_SENSORS = [
-        "temp_01",
-        "temp_02",
-        "pressure_01",
-        "rpm_01"
-    ]
-
     REQUIRED_FIELDS = [
         "sensor_id",
-        "value",
+        "temperature",
+        "pressure",
+        "rpm",
         "timestamp"
     ]
-
-    MAX_PACKET_AGE = 30  # seconds
 
     def __init__(self, secret_key: str):
         self.secret_key = secret_key.encode("utf-8")
 
     # =====================================================
-    # HMAC SIGNATURE GENERATION
+    # SIGNATURE GENERATION
     # =====================================================
 
-    def generate_signature(self, payload: dict) -> str:
+    def generate_signature(
+        self,
+        payload: dict
+    ) -> str:
 
         payload_bytes = json.dumps(
             payload,
@@ -51,22 +46,36 @@ class TelemetryValidator:
         self,
         payload: dict,
         received_signature: str
-    ) -> bool:
+    ):
 
-        computed_signature = self.generate_signature(
-            payload
+        computed_signature = (
+            self.generate_signature(payload)
         )
 
-        return hmac.compare_digest(
+        valid = hmac.compare_digest(
             computed_signature,
             received_signature
         )
 
+        if not valid:
+            return (
+                False,
+                "Telemetry signature mismatch"
+            )
+
+        return (
+            True,
+            "Signature validated"
+        )
+
     # =====================================================
-    # REQUIRED FIELD VALIDATION
+    # FIELD VALIDATION
     # =====================================================
 
-    def validate_schema(self, payload: dict):
+    def validate_required_fields(
+        self,
+        payload: dict
+    ):
 
         for field in self.REQUIRED_FIELDS:
 
@@ -74,102 +83,155 @@ class TelemetryValidator:
 
                 return (
                     False,
-                    f"Missing required field: {field}"
+                    f"Missing field: {field}"
                 )
 
         return (
             True,
-            "Schema validation passed"
+            "Required fields present"
         )
 
     # =====================================================
-    # SENSOR AUTHENTICATION
+    # DATA TYPE VALIDATION
     # =====================================================
 
-    def validate_sensor(self, payload: dict):
+    def validate_data_types(
+        self,
+        payload: dict
+    ):
 
-        sensor_id = payload["sensor_id"]
-
-        if sensor_id not in self.AUTHORIZED_SENSORS:
-
+        if not isinstance(
+            payload["sensor_id"],
+            str
+        ):
             return (
                 False,
-                f"Unauthorized sensor: {sensor_id}"
+                "sensor_id must be string"
+            )
+
+        numeric_fields = [
+            "temperature",
+            "pressure",
+            "rpm",
+            "timestamp"
+        ]
+
+        for field in numeric_fields:
+
+            if not isinstance(
+                payload[field],
+                (int, float)
+            ):
+                return (
+                    False,
+                    f"{field} must be numeric"
+                )
+
+        return (
+            True,
+            "Data types valid"
+        )
+
+    # =====================================================
+    # SENSOR RANGE VALIDATION
+    # =====================================================
+
+    def validate_ranges(
+        self,
+        payload: dict
+    ):
+
+        if not (
+            -50 <= payload["temperature"] <= 200
+        ):
+            return (
+                False,
+                "Temperature out of range"
+            )
+
+        if not (
+            0 <= payload["pressure"] <= 1000
+        ):
+            return (
+                False,
+                "Pressure out of range"
+            )
+
+        if not (
+            0 <= payload["rpm"] <= 10000
+        ):
+            return (
+                False,
+                "RPM out of range"
             )
 
         return (
             True,
-            "Sensor authentication passed"
+            "Sensor values valid"
         )
 
     # =====================================================
-    # TIMESTAMP VALIDATION
-    # =====================================================
-
-    def validate_timestamp(self, payload: dict):
-
-        packet_time = payload["timestamp"]
-
-        current_time = time.time()
-
-        if abs(current_time - packet_time) > self.MAX_PACKET_AGE:
-
-            return (
-                False,
-                "Telemetry packet expired"
-            )
-
-        return (
-            True,
-            "Timestamp validation passed"
-        )
-
-    # =====================================================
-    # FULL TELEMETRY VALIDATION
+    # COMPLETE PACKET VALIDATION
     # =====================================================
 
     def validate_packet(
         self,
         payload: dict,
-        received_signature: str
+        signature: str
     ):
 
-        schema_ok, schema_msg = self.validate_schema(
-            payload
+        valid, message = (
+            self.validate_required_fields(
+                payload
+            )
         )
 
-        if not schema_ok:
-            return False, schema_msg
-
-        sensor_ok, sensor_msg = self.validate_sensor(
-            payload
-        )
-
-        if not sensor_ok:
-            return False, sensor_msg
-
-        timestamp_ok, timestamp_msg = self.validate_timestamp(
-            payload
-        )
-
-        if not timestamp_ok:
-            return False, timestamp_msg
-
-        signature_ok = self.validate_signature(
-            payload,
-            received_signature
-        )
-
-        if not signature_ok:
-
+        if not valid:
             return (
                 False,
-                "Signature validation failed"
+                message
+            )
+
+        valid, message = (
+            self.validate_data_types(
+                payload
+            )
+        )
+
+        if not valid:
+            return (
+                False,
+                message
+            )
+
+        valid, message = (
+            self.validate_ranges(
+                payload
+            )
+        )
+
+        if not valid:
+            return (
+                False,
+                message
+            )
+
+        valid, message = (
+            self.validate_signature(
+                payload,
+                signature
+            )
+        )
+
+        if not valid:
+            return (
+                False,
+                message
             )
 
         return (
             True,
-            "Telemetry packet validated successfully"
+            "Telemetry packet validated"
         )
 
 
@@ -183,42 +245,23 @@ if __name__ == "__main__":
         "super_secret_aerospace_key"
     )
 
-    telemetry_data = {
+    packet = {
         "sensor_id": "temp_01",
-        "value": 98.6,
-        "timestamp": time.time()
+        "temperature": 72,
+        "pressure": 410,
+        "rpm": 1500,
+        "timestamp": 1718000000
     }
 
-    signature = validator.generate_signature(
-        telemetry_data
+    signature = (
+        validator.generate_signature(
+            packet
+        )
     )
 
-    valid, message = validator.validate_packet(
-        telemetry_data,
+    result = validator.validate_packet(
+        packet,
         signature
     )
 
-    print(
-        f"Validation Result: {valid}"
-    )
-
-    print(
-        f"Message: {message}"
-    )
-
-    tampered_data = telemetry_data.copy()
-
-    tampered_data["value"] = 500.0
-
-    valid, message = validator.validate_packet(
-        tampered_data,
-        signature
-    )
-
-    print(
-        f"Tampered Result: {valid}"
-    )
-
-    print(
-        f"Message: {message}"
-    )
+    print(result)
