@@ -4,6 +4,31 @@
 
 The primary objective of Week 6 was to integrate the previously developed security modules into a fully functioning telemetry security platform. This involved connecting simulated sensor devices to a centralized controller API, processing telemetry through a Security Gateway, storing validated telemetry, and displaying operational and security data through a real-time dashboard.
 
+## System Architecture
+<img width="3738" height="3239" alt="image" src="https://github.com/user-attachments/assets/4633b71c-37a1-436b-869d-1b5489ab2dea" />
+
+The Secure ICS Telemetry & Detection Platform utilizes a layered security architecture designed to validate, authenticate, monitor, and visualize industrial telemetry data in real time.
+
+```text
+Sensor Node
+      ↓
+Telemetry Client
+      ↓
+Flask Controller API
+      ↓
+Security Gateway
+      ├── Telemetry Validator
+      ├── Sensor Registry
+      ├── Replay Detector
+      └── Anomaly Detector
+      ↓
+Telemetry Storage
+      ↓
+Streamlit Dashboard
+```
+
+Telemetry data originates from simulated industrial sensors and is transmitted to the Controller API. The Security Gateway performs integrity validation, device authentication, replay protection, and anomaly detection before accepted telemetry is stored and displayed within the dashboard.
+ 
 ## Objectives
 
 * Develop an end-to-end telemetry pipeline.
