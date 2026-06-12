@@ -1,11 +1,38 @@
 import time
-def simulate_replat(engine):
-    print(" ...Starting Spoof Attack...")
+import requests
 
-    # capture a valid "normal" packet
-    valid_packet = {"id": "TEMP_O1", "type": "temperature", "value": 72}
+from security.validation import TelemetryValidator
 
-    # resend the same "valid" packet multiple times
-    for _ in range(3):
-        print(engine.analyze(valid_packet["id"], valid_packet["type"], valid_packet["value"]))
-        time.sleep(1)
+validator = TelemetryValidator(
+    "super_secret_aerospace_key"
+)
+
+packet = {
+    "sensor_id": "temp_01",
+    "temperature": 72,
+    "pressure": 410,
+    "rpm": 1500,
+    "timestamp": time.time()
+}
+
+signature = validator.generate_signature(
+    packet
+)
+
+packet["signature"] = signature
+
+#send original packet
+requests.post(
+    "http://localhost:5000/telemetry", 
+    json=packet
+)
+
+#replay some packet
+for _ in range(3):
+    response = requests.post(
+        "http://127.0.0.1:5000/telemetry",
+        json=packet
+    )
+
+    print(response.status_code)
+    print(response.json())
