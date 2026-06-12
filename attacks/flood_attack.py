@@ -1,9 +1,47 @@
-def simulate_flood(engine):
-    print(" Starting Flood Attack...")
+import requests
+import time
 
-    # burst 50 requests in 1 second
-    for _ in range(50):
-        engine.analyze("SENSOR_X", "rpm", 2500)
-    
-    # should trigger the "Rate Limit" (CRITICAL) alert
-    print("Flood complete. Check engine for CRITICAL alerts.")
+from security.validation import TelemetryValidator
+
+
+API_URL = "http://127.0.0.1:5000/telemetry"
+
+validator = TelemetryValidator(
+    "super_secret_aerospace_key"
+)
+
+packet = {
+
+    "sensor_id": "temp_01",
+
+    "temperature": 72,
+
+    "pressure": 410,
+
+    "rpm": 1500,
+
+    "timestamp": time.time()
+}
+
+signature = validator.generate_signature(
+    packet
+)
+
+# attacker modifies packet AFTER signing
+
+packet["temperature"] = 500
+
+packet["signature"] = signature
+
+response = requests.post(
+    API_URL,
+    json=packet
+)
+
+print(
+    response.status_code
+)
+
+print(
+    response.json()
+)
