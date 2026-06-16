@@ -1,177 +1,406 @@
-## Secure ICS Platform
+# Secure ICS Telemetry & Detection Platform
 
 ## Overview
-The Secure Distributed ICS Security Platform is a cybersecurity-focused industrial control system (ICS) simulation environment designed to model secure telemetry communications, zero-trust architecture, anomaly detection, and adversarial attack scenarios within cyber-physical systems.
 
-This platform simulates a distributed industrial environment where multiple sensor nodes communicate with a centralized controller through a secure telemetry pipeline. The system implements layered security controls including authentication, integrity validation, replay protection, behavioral anomaly detection, centralized logging, and security monitoring.
+The Secure ICS Telemetry & Detection Platform is a cybersecurity-focused Industrial Control System (ICS) simulation environment designed to demonstrate secure telemetry communications, attack detection, security monitoring, and Zero Trust security principles within Operational Technology (OT) environments.
 
-The project is designed to mirror real-world operational technology (OT) and industrial cybersecurity concepts commonly found in aerospace, manufacturing, critical infrastructure, and defense environments.
- 
+The platform simulates industrial sensor devices transmitting telemetry to a centralized controller through a secure telemetry pipeline. Security controls are applied at multiple layers to validate data integrity, authenticate devices, detect malicious activity, and provide real-time monitoring capabilities.
+
+This project models security concepts commonly found in aerospace, manufacturing, energy, transportation, and critical infrastructure environments.
+
+### Key Features
+
+* Zero Trust telemetry communications
+* Device authentication and authorization
+* HMAC SHA-256 telemetry integrity validation
+* Replay attack detection and prevention
+* Behavioral anomaly detection
+* Real-time security monitoring dashboard
+* Centralized telemetry storage and logging
+* Industrial cyber attack simulation framework
+
+---
+
+## Architecture
+
+```text
+Sensor Nodes
+      ↓
+Telemetry Client
+      ↓
+Flask Controller API
+      ↓
+Security Gateway
+      ├── Telemetry Validator
+      ├── Sensor Registry
+      ├── Replay Detector
+      └── Anomaly Detector
+      ↓
+Telemetry Storage
+      ↓
+Streamlit Security Dashboard
+```
+
+---
+
+## Security Pipeline
+
+<img width="1844" height="3948" alt="image" src="https://github.com/user-attachments/assets/844432f6-569a-4bb2-b89c-a968cc35a888" />
+
+
+---
+
 ## Objectives
-The primary objectives of this project are:
- -Simulate distributed industrial telemetry systems
- -Implement zero-trust communication principles
- -Detect and mitigate cyber attacks targeting ICS environments
- -Model adversarial behaviors includong spoofing and replay attacks
- -Build centralized security monitoring and logging
- -Demostrate layered security engineering practices
- -Explore operational technology (OT) cybersecurity concepts
 
-## System Architecture
-<img width="7665" height="1525" alt="image" src="https://github.com/user-attachments/assets/c0d750d9-1494-4c56-93a6-88b899b295d0" />
+* Simulate distributed industrial telemetry systems
+* Implement Zero Trust communication principles
+* Detect and mitigate cyber attacks targeting ICS environments
+* Demonstrate layered security engineering practices
+* Build centralized security monitoring capabilities
+* Explore Operational Technology (OT) cybersecurity concepts
+* Model realistic industrial attack scenarios
 
+---
 
 ## Core Components
 
-### Sensor Layer
-Simulated industrial sensor nodes generate telemetry including:
-- Temperature
-- Pressure
-- RPM
+### Sensor Nodes
+
+Simulated industrial devices that generate:
+
+* Temperature telemetry
+* Pressure telemetry
+* RPM telemetry
+* Timestamp information
+
+### Telemetry Client
+
+Generates and securely transmits telemetry packets to the Controller API.
+
+### Controller API
+
+Receives telemetry data, validates requests, and forwards packets to the Security Gateway.
 
 ### Security Gateway
-Acts as the zero-trust enforcement layer responsible for:
-- API authentication
-- Integrity validation
-- Replay attack detection
-- Input validation
-- Rate limiting
 
-### Controller Engine
-Processes validated telemetry and executes operational decision logic.
+Acts as the centralized security enforcement layer responsible for:
 
-### Detection Engine
-Analyzes telemetry behavior for:
-- Anomalies
-- Threat indicators
-- Behavioral deviations
-- Security events
+* Packet validation
+* Device authentication
+* Replay attack protection
+* Anomaly detection integration
+* Security event generation
+* Telemetry acceptance and rejection decisions
 
-### Logging Layer
-Centralized event storage for:
-- Security alerts
-- Authentication failures
-- Telemetry anomalies
-- Audit events
+### Telemetry Validator
 
-### Monitoring Dashboard
-The dashboard provides operational visibility into telemetry, attack activity, and security events generated by the Secure Distributed ICS Platform.
+Performs:
 
-Features:
-- Live telemetry monitoring
-- Security alert visualization
-- Operational status indicators
-- Attack monitoring
-- Event visibility
+* Schema validation
+* Data type validation
+* Timestamp validation
+* HMAC SHA-256 integrity verification
 
-## Security Features
-## Zero Trust Communication
-All sensor nodes must authenticate before telemetry is accepted by the platform. No device or telemetry source is trusted by default.
+### Sensor Registry
 
-## Integrity Validation
-Telemetry packets are validated using SHA-256 hashing to ensure data has not been modified during transmission.
+Maintains authorized device identities and enforces device authentication policies.
 
-## Replay Attack Protection
-The system validates telemetry timestamps to detect and reject replayed packets.
+### Replay Detector
 
-## Behavioral Anomaly Detection
-The Detection Engine monitors telemetry patterns for abnormal operational behavior and suspicious activity.
+Identifies stale, duplicate, and replayed telemetry packets.
 
-## Centralized Logging
-Security-relevant events including authentication failures, replay attempts, and anomalies are centrally logged for monitoring and forensic analysis.
+### Anomaly Detector
 
-## Rate Limiting
-The Security Gateway mitigates flooding attacks and excessive telemetry submissions through request rate controls.
+Monitors telemetry behavior for:
 
-## Input Validation
-All incoming telemetry is validated against expected schemas and operational ranges before processing.
+* Abnormal operating conditions
+* Behavioral deviations
+* Potential security threats
 
-## Threat Model
-The platform simulates several realistic industrial control system (ICS) attack scenarios targeting distributed telemetry systems.
+### Telemetry Storage
 
-## Attack Simulation
-The platform includes adversarial testing scenarios designed to emulate realistic cyber threats targeting industrial systems.
+Stores accepted telemetry and security events for analysis and visualization.
 
-## Spoofing Attack Simulation
-Simulates a rogue sensor transmitting falsified telemetry values to the controller.
-## Replay Attack Simulation
-Reuses previously captured telemetry packets to test replay detection logic.
+### Security Dashboard
 
-### Objective
-Validate timestamp freshness verification and replay protection.
+Provides real-time visibility into:
 
+* Live telemetry
+* Security alerts
+* Attack activity
+* Operational status
+* Security metrics
 
-## Flooding Attack Simulation
-Sends excessive telemetry requests to overwhelm the Security Gateway.
+---
 
-### Objective
-Evaluate availability protections and rate limiting controls.
+## Attack Simulation Framework
 
+The platform includes multiple adversarial testing scenarios designed to emulate realistic industrial cyber threats.
 
-## Data Tampering Simulation
-Modifies telemetry payloads during transmission without updating integrity signatures.
+### Replay Attack
 
-### Objective
-Verify integrity validation mechanisms.
+Reuses previously captured telemetry packets to validate replay detection controls.
 
+### Data Tampering Attack
 
+Modifies telemetry after signing to verify integrity validation mechanisms.
 
-## Unauthorized Node Simulation
-Attempts communication using invalid credentials or rogue API keys.
+### Unauthorized Node Attack
 
-### Objective
-Test authentication enforcement and logging capabilities.
+Attempts communication from an unregistered device to test authentication enforcement.
 
+### Spoofing Attack
+
+Injects malicious telemetry values to evaluate anomaly detection capabilities.
+
+### Flooding Attack
+
+Generates high volumes of telemetry traffic to test platform resiliency and monitoring effectiveness.
+
+---
+
+## Project Structure
+
+```text
+secure-ics-system/
+
+├── app.py
+
+├── controller/
+│   ├── controller_api.py
+│   └── telemetry_client.py
+
+├── security/
+│   ├── gateway.py
+│   ├── validation.py
+│   ├── sensor_registry.py
+│   ├── replay_detection.py
+│   └── anomaly_detection.py
+
+├── attacks/
+│   ├── replay_attack.py
+│   ├── spoof_attack.py
+│   ├── tamper_attack.py
+│   ├── flood_attack.py
+│   └── unauthorized_node.py
+
+├── logs/
+│   ├── telemetry.json
+│   └── system_logs.txt
+
+├── docs/
+
+└── dashboard.py
+```
+
+---
+
+## Installation
+
+### Prerequisites
+
+* Python 3.11+
+* Git
+* Pip
+* Docker (Optional)
+
+### Clone Repository
+
+```bash
+git clone https://github.com/yourusername/secure-ics-system.git
+
+cd secure-ics-system
+```
+
+### Create Virtual Environment
+
+#### Windows
+
+```bash
+python -m venv venv
+
+venv\Scripts\activate
+```
+
+#### Linux / macOS
+
+```bash
+python3 -m venv venv
+
+source venv/bin/activate
+```
+
+### Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Running the Platform
+
+### Step 1: Start Controller API
+
+Open a terminal from the project root directory:
+
+```bash
+python -m controller.controller_api
+```
+
+Expected Output:
+
+```text
+* Running on http://127.0.0.1:5000
+```
+
+The Controller API will begin accepting telemetry packets.
+
+---
+
+### Step 2: Start Telemetry Client
+
+Open a second terminal and activate the virtual environment.
+
+Run:
+
+```bash
+python -m controller.telemetry_client
+```
+
+Example Output:
+
+```text
+Sending telemetry packet...
+Telemetry Accepted
+
+Sending telemetry packet...
+Telemetry Accepted
+```
+
+Telemetry packets will pass through the complete security pipeline before being accepted.
+
+---
+
+### Step 3: Launch Security Dashboard
+
+Open a third terminal and run:
+
+```bash
+streamlit run dashboard.py
+```
+
+Open the dashboard in your browser:
+
+```text
+http://localhost:8501
+```
+
+---
+
+## Running Attack Simulations
+
+Open a new terminal and execute any attack scenario.
+
+### Replay Attack
+
+```bash
+python attacks/replay_attack.py
+```
+
+### Data Tampering Attack
+
+```bash
+python attacks/tamper_attack.py
+```
+
+### Unauthorized Device Attack
+
+```bash
+python attacks/unauthorized_node.py
+```
+
+### Spoofing Attack
+
+```bash
+python attacks/spoof_attack.py
+```
+
+### Flooding Attack
+
+```bash
+python attacks/flood_attack.py
+```
+
+Security alerts and attack activity will be displayed in real time through the dashboard.
+
+---
+
+## Dashboard Metrics
+
+### Telemetry Monitoring
+
+* Packets Received
+* Packets Accepted
+* Packets Rejected
+
+### Security Monitoring
+
+* Replay Attacks Blocked
+* Integrity Failures
+* Unauthorized Devices
+* Anomalies Detected
+
+### Operational Monitoring
+
+* Live Telemetry Feed
+* Security Event Feed
+* Attack Activity Timeline
+* System Health Status
+
+---
+
+## Logs
+
+Telemetry and security events are stored locally for monitoring, auditing, and forensic analysis.
+
+```text
+logs/
+
+├── telemetry.json
+└── system_logs.txt
+```
+
+---
 
 ## Technologies
-| Python | Core platform development |
-| Flask | Telemetry API services |
-| Streamlit | Security monitoring dashboard |
-| Docker | Containerized deployment |
-| Git/GitHub | Version control and repository management |
 
-**## Future Improvements **
-## MQTT Integration
-Replace HTTP telemetry transport with MQTT-based industrial messaging.
+| Technology   | Purpose                        |
+| ------------ | ------------------------------ |
+| Python       | Core platform development      |
+| Flask        | Telemetry API services         |
+| Streamlit    | Security monitoring dashboard  |
+| Docker       | Containerized deployment       |
+| Git/GitHub   | Version control                |
+| HMAC SHA-256 | Telemetry integrity validation |
 
+---
 
+## Future Improvements
 
-## TLS Encryption
-Implement encrypted telemetry communication between distributed components.
+* MQTT integration for industrial messaging
+* TLS-encrypted telemetry communications
+* Machine learning-based anomaly detection
+* SIEM integration
+* Grafana dashboards
+* Role-Based Access Control (RBAC)
+* Secure secret management
+* Distributed multi-node deployment
+* Automated incident response workflows
+* Threat correlation and analytics
 
+---
 
+## Disclaimer
 
-## Machine Learning Detection
-Develop advanced anomaly detection using machine learning models trained on telemetry behavior.
-
-
-## Dockerized Deployment
-Containerize all platform components for distributed deployment and scalability.
-
-
-
-## SIEM Integration
-Forward security events into a centralized security information and event management pipeline.
-
-
-
-## Role-Based Access Control
-Implement authorization policies restricting access to operational components.
-
-
-
-## Grafana Monitoring
-Integrate advanced telemetry visualization and operational dashboards.
-
-
-
-## Secure Secret Management
-Protect API keys and credentials using environment-based secret storage.
-
-
-## Distributed Multi-Node Deployment
-Expand the platform to support geographically distributed sensor simulations.
-
-
-## Advanced Threat Correlation
-Develop event correlation capabilities for identifying multi-stage attack behavior.
+This project is intended for cybersecurity education, research, and demonstration purposes only. All attack simulations are executed within a controlled environment and are designed to demonstrate defensive security concepts.
