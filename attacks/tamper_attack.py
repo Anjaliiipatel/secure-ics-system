@@ -38,6 +38,8 @@ response = requests.post(
     json=packet
 )
 
+print("\nTamper Attack Result:\n")
+
 print(
     response.status_code
 )

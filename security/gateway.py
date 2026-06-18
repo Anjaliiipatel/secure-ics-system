@@ -116,7 +116,28 @@ class SecurityGateway:
         # STEP 2
         # Sensor Authentication
         # ---------------------------------------------
+        authorized = self.sensor_registry.is_authorized(
+            packet["sensor_id"]
+        )
 
+        if not authorized:
+            self.stats["packets_rejected"] += 1
+            self.stats["authentication_failures"] += 1
+
+            self.log_event(
+                "CRITICAL",
+                "Authentication Failure",
+                f"Unauthorized sensor: {packet['sensor_id']}"
+            )
+
+            return {
+                "status": "REJECTED",
+                "reason": f"Unauthorized sensor: {packet['sensor_id']}"
+            }
+            self.incident_manager.create_incident(
+                "Authentication Failure",
+                "CRITICAL"
+            )
         # ---------------------------------------------
         # STEP 4
         # Anomaly Detection
