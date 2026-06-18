@@ -1,1 +1,16 @@
-[]
+[
+    {
+        "id": "INC-001",
+        "type": "Replay Attack",
+        "severity": "HIGH",
+        "status": "OPEN",
+        "created": "2026-06-17 16:50:29"
+    },
+    {
+        "id": "INC-002",
+        "type": "Unauthorized Sensor",
+        "severity": "MEDIUM",
+        "status": "OPEN",
+        "created": "2026-06-17 16:50:29"
+    }
+]

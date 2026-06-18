@@ -6,6 +6,7 @@ from security.validation import TelemetryValidator
 from security.replay_detection import ReplayDetector
 from security.anomaly_detection import AnomalyDetector
 from security.sensor_registry import SensorRegistry
+from incidents.incident_manager import IncidentManager
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -29,6 +30,8 @@ class SecurityGateway:
         self.anomaly_detector = AnomalyDetector()
 
         self.sensor_registry = SensorRegistry()
+
+        self.incident_manager = IncidentManager()
 
         # =============================================
         # Gateway Statistics
@@ -100,75 +103,19 @@ class SecurityGateway:
                 "Integrity Failure",
                 message
             )
-
+            
             return {
                 "status": "REJECTED",
                 "reason": message
             }
-
+            self.incident_manager.create_incident(
+                "Integrity Failure",
+                "CRITICAL"
+            )
         # ---------------------------------------------
         # STEP 2
         # Sensor Authentication
         # ---------------------------------------------
-
-        sensor_id = packet.get(
-            "sensor_id"
-        )
-
-        if not self.sensor_registry.is_authorized(
-            sensor_id
-        ):
-
-            self.stats[
-                "packets_rejected"
-            ] += 1
-
-            self.stats[
-                "unauthorized_sensors_blocked"
-            ] += 1
-
-            self.log_event(
-                "HIGH",
-                "Unauthorized Sensor",
-                f"Unauthorized device attempted communication: {sensor_id}"
-            )
-
-            return {
-                "status": "REJECTED",
-                "reason": "Unauthorized Sensor"
-            }
-
-        # ---------------------------------------------
-        # STEP 3
-        # Replay Detection
-        # ---------------------------------------------
-
-        replay, replay_message = (
-            self.replay_detector.is_replay(
-                packet["timestamp"]
-            )
-        )
-
-        if replay:
-
-            self.stats[
-                "replay_attacks_blocked"
-            ] += 1
-
-            self.stats[
-                "packets_rejected"
-            ] += 1
-
-            self.log_event(
-                "HIGH",
-                "Replay Attack",
-                replay_message
-            )
-
-            return {
-                "status": "REJECTED",
-                "reason": replay_message
-            }
 
         # ---------------------------------------------
         # STEP 4
