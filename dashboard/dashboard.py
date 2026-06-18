@@ -8,6 +8,9 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
+from analytics.security_analytics import SecurityAnalytics
+from analytics.threat_score import ThreatScore
+from incidents.incident_manager import IncidentManager
 
 
 # =========================
@@ -195,6 +198,23 @@ else:
 
 latest = telemetry_df.iloc[-1]
 logs = load_logs()
+analytics = SecurityAnalytics()
+
+threat_engine = ThreatScore()
+
+incident_manager = IncidentManager()
+
+dashboard_summary = (
+    analytics.get_dashboard_summary()
+)
+
+threat_data = (
+    threat_engine.get_dashboard_data()
+)
+
+open_incidents = (
+    incident_manager.get_open_incidents()
+)
 
 latest_log = logs[-1] if logs else ""
 
@@ -531,10 +551,30 @@ st.markdown("<br>", unsafe_allow_html=True)
 c1, c2, c3, c4 = st.columns(4)
 
 cards = [
-    ("Packets Received", gateway_stats["packets_received"], "Gateway"),
-    ("Packets Accepted", gateway_stats["packets_accepted"], "Validated"),
-    ("Packets Rejected", gateway_stats["packets_rejected"], "Blocked"),
-    ("Replay Attacks", gateway_stats["replay_attacks_blocked"], "Detected"),
+
+    (
+        "Threat Level",
+        threat_data["level"],
+        "Current Risk"
+    ),
+
+    (
+        "Threat Score",
+        threat_data["score"],
+        "0-100 Scale"
+    ),
+
+    (
+        "Open Incidents",
+        len(open_incidents),
+        "Active Cases"
+    ),
+
+    (
+        "Gateway Health",
+        "ONLINE",
+        "Nominal"
+    )
 ]
 
 for col, (label, value, trend) in zip([c1, c2, c3, c4], cards):
