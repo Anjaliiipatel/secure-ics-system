@@ -8,6 +8,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
+
 from analytics.security_analytics import SecurityAnalytics
 from analytics.threat_score import ThreatScore
 from incidents.incident_manager import IncidentManager
@@ -18,7 +19,7 @@ from incidents.incident_manager import IncidentManager
 # =========================
 
 st.set_page_config(
-    page_title="Secure ICS Platform",
+    page_title="Secure ICS SOC",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -34,7 +35,13 @@ st_autorefresh(
 # File Paths
 # =========================
 
-BASE_DIR = Path(__file__).resolve().parents[1]
+CURRENT_DIR = Path(__file__).resolve().parent
+
+if (CURRENT_DIR / "logs").exists():
+    BASE_DIR = CURRENT_DIR
+else:
+    BASE_DIR = Path(__file__).resolve().parents[1]
+
 TELEMETRY_FILE = BASE_DIR / "logs" / "telemetry.json"
 LOG_FILE = BASE_DIR / "logs" / "system_logs.txt"
 
@@ -55,7 +62,7 @@ def load_telemetry():
 def load_logs():
     try:
         with open(LOG_FILE, "r", encoding="utf-8") as file:
-            return file.readlines()[-12:]
+            return file.readlines()[-20:]
     except Exception:
         return []
 
@@ -76,6 +83,10 @@ def fallback_telemetry():
         "voltage": [24.1 + random.uniform(-0.3, 0.3) for _ in range(40)],
     })
 
+
+# =========================
+# Charts
+# =========================
 
 def live_telemetry_chart(df):
     fig = go.Figure()
@@ -114,57 +125,40 @@ def live_telemetry_chart(df):
     return fig
 
 
-def attack_surface_chart():
-    points = 28
-
-    df = pd.DataFrame({
-        "t": list(range(points)),
-        "attempts": [
-            max(0, round(8 + random.random() * 8))
-            for _ in range(points)
-        ],
-        "blocked": [
-            max(0, round(6 + random.random() * 7))
-            for _ in range(points)
-        ],
-    })
-
+def attack_distribution_chart(distribution):
     fig = go.Figure()
 
-    fig.add_trace(go.Scatter(
-        x=df["t"],
-        y=df["attempts"],
-        mode="lines",
-        name="Attempts",
-        line=dict(width=3),
-    ))
-
-    fig.add_trace(go.Scatter(
-        x=df["t"],
-        y=df["blocked"],
-        mode="lines",
-        name="Blocked",
-        line=dict(width=3),
-    ))
+    if distribution:
+        fig.add_trace(go.Pie(
+            labels=list(distribution.keys()),
+            values=list(distribution.values()),
+            hole=0.58,
+            textinfo="label+percent",
+        ))
+    else:
+        fig.add_trace(go.Pie(
+            labels=["No Threat Data"],
+            values=[1],
+            hole=0.58,
+            textinfo="label",
+        ))
 
     fig.update_layout(
         template="plotly_dark",
-        height=220,
+        height=300,
         margin=dict(l=10, r=10, t=20, b=10),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(color="#E5E7EB"),
-        legend=dict(orientation="h", y=1.12, x=0),
-        xaxis=dict(showgrid=False, title=""),
-        yaxis=dict(gridcolor="rgba(255,255,255,0.08)", title=""),
-        transition=dict(duration=400),
+        showlegend=True,
+        legend=dict(orientation="h", y=-0.1, x=0),
     )
 
     return fig
 
 
 # =========================
-# Load Data
+# Load Telemetry
 # =========================
 
 telemetry = load_telemetry()
@@ -198,23 +192,20 @@ else:
 
 latest = telemetry_df.iloc[-1]
 logs = load_logs()
+
+
+# =========================
+# Week 7 Analytics
+# =========================
+
 analytics = SecurityAnalytics()
-
 threat_engine = ThreatScore()
-
 incident_manager = IncidentManager()
 
-dashboard_summary = (
-    analytics.get_dashboard_summary()
-)
-
-threat_data = (
-    threat_engine.get_dashboard_data()
-)
-
-open_incidents = (
-    incident_manager.get_open_incidents()
-)
+dashboard_summary = analytics.get_dashboard_summary()
+attack_distribution = analytics.get_attack_percentages()
+threat_data = threat_engine.get_dashboard_data()
+open_incidents = incident_manager.get_open_incidents()
 
 latest_log = logs[-1] if logs else ""
 
@@ -229,6 +220,11 @@ new_event_detected = (
 
 st.session_state["previous_latest_log"] = latest_log
 
+
+# =========================
+# Derived Metrics
+# =========================
+
 critical_logs = [
     log for log in logs
     if "CRITICAL" in log.upper()
@@ -241,15 +237,32 @@ gateway_stats = {
         0
     ),
     "packets_rejected": len(critical_logs),
-    "replay_attacks_blocked": len([
-        log for log in logs
-        if "REPLAY" in log.upper()
-    ]),
-    "anomalies_detected": len([
-        log for log in logs
-        if "ANOMALY" in log.upper()
-    ]),
+    "replay_attacks_blocked": dashboard_summary.get(
+        "replay_attacks",
+        0
+    ),
+    "anomalies_detected": dashboard_summary.get(
+        "anomalies",
+        0
+    ),
 }
+
+
+# =========================
+# Threat Styling
+# =========================
+
+threat_level = threat_data.get("level", "LOW")
+threat_score = threat_data.get("score", 0)
+
+if threat_level == "CRITICAL":
+    threat_badge = "critical"
+elif threat_level == "HIGH":
+    threat_badge = "warning"
+elif threat_level == "MEDIUM":
+    threat_badge = "info"
+else:
+    threat_badge = "success"
 
 
 # =========================
@@ -294,9 +307,9 @@ html, body, [class*="css"] {
 
 .header-title {
     color: #F8FAFC;
-    font-size: 1.35rem;
-    font-weight: 800;
-    letter-spacing: -0.4px;
+    font-size: 1.55rem;
+    font-weight: 850;
+    letter-spacing: -0.5px;
 }
 
 .header-subtitle {
@@ -367,6 +380,19 @@ html, body, [class*="css"] {
     font-family: monospace;
     font-size: .75rem;
     margin-top: 4px;
+}
+
+.threat-card {
+    background:
+        linear-gradient(135deg, rgba(239,68,68,.16), rgba(59,130,246,.08)),
+        rgba(255,255,255,.045);
+    border: 1px solid rgba(239,68,68,.28);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow:
+        0 0 28px rgba(239,68,68,.18),
+        0 20px 50px rgba(0,0,0,.32);
+    animation: threatPulse 2.5s infinite;
 }
 
 .status-dot {
@@ -486,6 +512,20 @@ html, body, [class*="css"] {
     }
 }
 
+@keyframes threatPulse {
+    0% {
+        box-shadow: 0 0 12px rgba(239,68,68,.10);
+    }
+
+    50% {
+        box-shadow: 0 0 30px rgba(239,68,68,.26);
+    }
+
+    100% {
+        box-shadow: 0 0 12px rgba(239,68,68,.10);
+    }
+}
+
 @keyframes fadeUp {
     from {
         opacity: 0;
@@ -524,19 +564,19 @@ html, body, [class*="css"] {
 
 utc_now = datetime.now(timezone.utc).strftime("%H:%M:%S")
 
-left, right = st.columns([2.5, 1])
+left, right = st.columns([2.4, 1.2])
 
 with left:
     st.markdown("""
-    <div class="header-subtitle">Secure Distributed ICS Platform</div>
-    <div class="header-title">Operations Command</div>
+    <div class="header-subtitle">Industrial Security Operations Center</div>
+    <div class="header-title">Secure ICS Security Operations Command</div>
     """, unsafe_allow_html=True)
 
 with right:
     st.markdown(f"""
     <div style="display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
         <div class="top-chip">UTC {utc_now}</div>
-        <div class="top-chip nominal"><span class="status-dot"></span> SYSTEM NOMINAL</div>
+        <div class="top-chip nominal"><span class="status-dot"></span> GATEWAY ONLINE</div>
         <div class="top-chip">⚡ LIVE TELEMETRY</div>
     </div>
     """, unsafe_allow_html=True)
@@ -545,42 +585,26 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 
 # =========================
-# Mission Status
+# SOC Executive Metrics
 # =========================
 
 c1, c2, c3, c4 = st.columns(4)
 
 cards = [
-
-    (
-        "Threat Level",
-        threat_data["level"],
-        "Current Risk"
-    ),
-
-    (
-        "Threat Score",
-        threat_data["score"],
-        "0-100 Scale"
-    ),
-
-    (
-        "Open Incidents",
-        len(open_incidents),
-        "Active Cases"
-    ),
-
-    (
-        "Gateway Health",
-        "ONLINE",
-        "Nominal"
-    )
+    ("Threat Level", threat_level, "Current Risk"),
+    ("Threat Score", f"{threat_score}/100", "Risk Index"),
+    ("Open Incidents", len(open_incidents), "Active Cases"),
+    ("Gateway Health", "ONLINE", "Nominal"),
 ]
 
-for col, (label, value, trend) in zip([c1, c2, c3, c4], cards):
+for index, (col, (label, value, trend)) in enumerate(
+    zip([c1, c2, c3, c4], cards)
+):
     with col:
+        card_class = "threat-card" if index == 0 else "metric-card"
+
         st.markdown(f"""
-        <div class="metric-card">
+        <div class="{card_class}">
             <div class="metric-label">{label}</div>
             <div class="metric-value">{value}</div>
             <div class="metric-trend">{trend}</div>
@@ -618,6 +642,11 @@ st.markdown("<br>", unsafe_allow_html=True)
 main_left, main_right = st.columns([2, 1])
 
 with main_left:
+
+    # =========================
+    # Live Telemetry
+    # =========================
+
     st.markdown("""
     <div class="panel">
         <div class="section-title">Live Telemetry</div>
@@ -654,17 +683,21 @@ with main_left:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    # =========================
+    # Threat Intelligence Row
+    # =========================
+
     a1, a2 = st.columns(2)
 
     with a1:
         st.markdown("""
         <div class="panel">
-            <div class="section-title">Attack Surface (24h)</div>
-            <div class="section-subtitle">Attempts vs blocked</div>
+            <div class="section-title">Attack Distribution</div>
+            <div class="section-subtitle">Threat categories from system logs</div>
         """, unsafe_allow_html=True)
 
         st.plotly_chart(
-            attack_surface_chart(),
+            attack_distribution_chart(attack_distribution),
             use_container_width=True
         )
 
@@ -777,27 +810,83 @@ with main_left:
     st.markdown("""
     <div class="panel">
         <div class="section-title">Security Metrics</div>
-        <div class="section-subtitle">Gateway Performance</div>
+        <div class="section-subtitle">Analytics Summary</div>
     </div>
     """, unsafe_allow_html=True)
 
     m1, m2, m3, m4 = st.columns(4)
 
-    m1.metric("Anomalies", gateway_stats["anomalies_detected"])
-    m2.metric("Replay Attacks", gateway_stats["replay_attacks_blocked"])
-    m3.metric("Rejected Packets", gateway_stats["packets_rejected"])
-    m4.metric("Accepted Packets", gateway_stats["packets_accepted"])
+    m1.metric("Total Events", dashboard_summary.get("total_events", 0))
+    m2.metric("Total Attacks", dashboard_summary.get("total_attacks", 0))
+    m3.metric("Replay", dashboard_summary.get("replay_attacks", 0))
+    m4.metric("Integrity", dashboard_summary.get("integrity_failures", 0))
 
 
 with main_right:
+
+    # =========================
+    # Open Incidents
+    # =========================
+
     st.markdown("""
     <div class="panel">
-        <div class="section-title">Security Alerts</div>
-        <div class="section-subtitle">Real-time event feed</div>
+        <div class="section-title">Open Incidents</div>
+        <div class="section-subtitle">Active Security Cases</div>
+    """, unsafe_allow_html=True)
+
+    if open_incidents:
+        for incident in reversed(open_incidents[-6:]):
+            severity = incident.get("severity", "INFO")
+
+            if severity == "CRITICAL":
+                badge = "critical"
+            elif severity == "HIGH":
+                badge = "warning"
+            elif severity == "MEDIUM":
+                badge = "info"
+            else:
+                badge = "success"
+
+            st.markdown(f"""
+            <div class="alert-card">
+                <span class="badge {badge}">
+                    {html.escape(incident.get("id", "INC"))}
+                </span><br>
+                <strong>
+                    {html.escape(incident.get("type", "Security Event"))}
+                </strong><br>
+                <span class="muted">
+                    Severity: {html.escape(severity)} · Status: {html.escape(incident.get("status", "OPEN"))}
+                </span><br>
+                <span class="muted">
+                    {html.escape(incident.get("created", ""))}
+                </span>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div class="alert-card">
+            <span class="badge success">CLEAR</span><br>
+            <span class="muted">No open incidents.</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # =========================
+    # Security Timeline
+    # =========================
+
+    st.markdown("""
+    <div class="panel">
+        <div class="section-title">Security Timeline</div>
+        <div class="section-subtitle">Real-time Event Feed</div>
     """, unsafe_allow_html=True)
 
     if logs:
-        for log in reversed(logs[-8:]):
+        for log in reversed(logs[-10:]):
             upper = log.upper()
 
             if "CRITICAL" in upper:
@@ -806,15 +895,20 @@ with main_right:
             elif "HIGH" in upper or "MEDIUM" in upper:
                 badge = "warning"
                 label = "WARNING"
+            elif "ACCEPTED" in upper:
+                badge = "success"
+                label = "ACCEPTED"
             else:
                 badge = "info"
                 label = "INFO"
 
             st.markdown(f"""
             <div class="alert-card">
-                <span class="badge {badge}">{label}</span><br>
+                <span class="badge {badge}">
+                    {label}
+                </span><br>
                 <span class="muted">
-                    {log.strip()}
+                    {html.escape(log.strip())}
                 </span>
             </div>
             """, unsafe_allow_html=True)
@@ -837,7 +931,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 st.markdown("""
 <div class="muted" style="display:flex; justify-content:space-between; font-family:monospace; font-size:.75rem;">
-    <div>ingest stream: ws://ics-gateway/telemetry</div>
-    <div>Modbus · DNP3 · OPC-UA · uptime 99.982%</div>
+    <div>ingest stream: http://127.0.0.1:5000/telemetry</div>
+    <div>HMAC SHA-256 · Replay Protection · Sensor Registry · SOC Monitoring</div>
 </div>
 """, unsafe_allow_html=True)
