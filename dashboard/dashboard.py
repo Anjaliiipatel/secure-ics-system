@@ -1,3 +1,11 @@
+import sys
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+
+if str(BASE_DIR) not in sys.path:
+    sys.path.append(str(BASE_DIR))
+    
 import json
 import html
 import random
@@ -12,6 +20,8 @@ from streamlit_autorefresh import st_autorefresh
 from analytics.security_analytics import SecurityAnalytics
 from analytics.threat_score import ThreatScore
 from incidents.incident_manager import IncidentManager
+
+
 
 
 # =========================
