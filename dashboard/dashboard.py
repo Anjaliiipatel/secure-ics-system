@@ -826,6 +826,20 @@ with main_left:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    st.markdown("""
+    <div class="panel">
+        <div class="section-title">Threat Score Trend</div>
+        <div class="section-subtitle">Historical risk score over time</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.plotly_chart(
+        threat_trend_chart(threat_history),
+        use_container_width=True
+    )
+
+    st.markdown("</div>", unsafe_allow_html=True)
+    
     # =========================
     # Operational Status
     # =========================
