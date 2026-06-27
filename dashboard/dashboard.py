@@ -228,6 +228,7 @@ dashboard_summary = analytics.get_dashboard_summary()
 attack_distribution = analytics.get_attack_percentages()
 threat_data = threat_engine.get_dashboard_data()
 open_incidents = incident_manager.get_open_incidents()
+report_generator = SecurityReportGenerator()
 
 latest_log = logs[-1] if logs else ""
 
@@ -943,28 +944,40 @@ with main_right:
         """, unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
-    report_generator = SecurityReportGenerator()
+    # =========================
+    # Security Reports
+    # =========================
+
+    
 
     st.markdown("""
-                <div class="panel">
-                <div class="section-title">Security Reports</div>
-                <div class="section-subtitle">Generate executive security summaries</div>
-                </div>
-                """, unsafe_allow_html=True)
+    <div class="panel">
+        <div class="section-title">Security Reports</div>
+        <div class="section-subtitle">Generate executive security summaries</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if "generated_reports" not in st.session_state:
+        st.session_state["generated_reports"] = None
 
     if st.button("📄 Generate Security Report"):
+        st.session_state["generated_reports"] = (
+            report_generator.generate_all_reports()
+    )
 
-        reports = report_generator.generate_all_reports()
+    st.success("Security reports generated!")
 
-        st.success("Security reports generated!")
+    if st.session_state["generated_reports"]:
 
-        st.markdown("### Generated Files")
+        for label, path in st.session_state["generated_reports"].items():
 
-        st.write("Text Report")
-        st.code(reports["text_report"])
-
-        st.write("JSON Report")
-        st.code(reports["json_report"])
+            with open(path, "rb") as file:
+                st.download_button(
+                    label=f"Download {label}",
+                    data=file,
+                    file_name=Path(path).name,
+                    mime="application/octet-stream"
+                )
 
 # =========================
 # Footer
