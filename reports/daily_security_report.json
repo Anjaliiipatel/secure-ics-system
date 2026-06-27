@@ -1,13 +1,13 @@
 {
-    "generated_at": "2026-06-26 23:24:44",
+    "generated_at": "2026-06-26 23:54:33",
     "threat_level": "CRITICAL",
     "threat_score": 100,
-    "total_events": 1580,
-    "total_attacks": 867,
+    "total_events": 1921,
+    "total_attacks": 1051,
     "replay_attacks": 21,
     "integrity_failures": 6,
     "unauthorized_sensors": 4,
-    "anomalies": 836,
+    "anomalies": 1020,
     "open_incidents": 2,
     "incidents": [
         {
