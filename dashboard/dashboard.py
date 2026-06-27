@@ -1,7 +1,6 @@
 import sys
 from pathlib import Path
 
-from reports import report_generator
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 
@@ -944,6 +943,7 @@ with main_right:
         """, unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
+    report_generator = SecurityReportGenerator()
 
     st.markdown("""
                 <div class="panel">
@@ -952,12 +952,19 @@ with main_right:
                 </div>
                 """, unsafe_allow_html=True)
 
-    if st.button("Generate Security Report"):
+    if st.button("📄 Generate Security Report"):
+
         reports = report_generator.generate_all_reports()
-        
-        st.success("Security reports generated successfully.")
-        
-        st.write(reports)
+
+        st.success("Security reports generated!")
+
+        st.markdown("### Generated Files")
+
+        st.write("Text Report")
+        st.code(reports["text_report"])
+
+        st.write("JSON Report")
+        st.code(reports["json_report"])
 
 # =========================
 # Footer
