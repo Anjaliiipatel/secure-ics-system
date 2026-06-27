@@ -1,16 +1,15 @@
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parents[1]
 
 if str(BASE_DIR) not in sys.path:
-    sys.path.append(str(BASE_DIR))
-    
+    sys.path.insert(0, str(BASE_DIR))
+
 import json
 import html
 import random
 from datetime import datetime, timezone
-from pathlib import Path
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -20,8 +19,6 @@ from streamlit_autorefresh import st_autorefresh
 from analytics.security_analytics import SecurityAnalytics
 from analytics.threat_score import ThreatScore
 from incidents.incident_manager import IncidentManager
-
-
 
 
 # =========================
@@ -36,7 +33,7 @@ st.set_page_config(
 )
 
 st_autorefresh(
-    interval=500,
+    interval=250,
     key="live_dashboard_refresh"
 )
 
@@ -99,6 +96,8 @@ def fallback_telemetry():
 # =========================
 
 def live_telemetry_chart(df):
+    df = df.sort_values(by="timestamp").tail(60)
+
     fig = go.Figure()
 
     fig.add_trace(go.Scatter(
@@ -106,7 +105,7 @@ def live_telemetry_chart(df):
         y=df["pressure"],
         mode="lines",
         name="Pressure",
-        line=dict(width=3),
+        line=dict(width=3, shape="spline"),
         fill="tozeroy",
     ))
 
@@ -115,13 +114,20 @@ def live_telemetry_chart(df):
         y=df["temperature"],
         mode="lines",
         name="Temperature",
-        line=dict(width=3),
-        fill="tozeroy",
+        line=dict(width=3, shape="spline"),
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=df["timestamp"],
+        y=df["rpm"],
+        mode="lines",
+        name="RPM",
+        line=dict(width=3, shape="spline"),
     ))
 
     fig.update_layout(
         template="plotly_dark",
-        height=330,
+        height=360,
         margin=dict(l=10, r=10, t=25, b=10),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
@@ -129,7 +135,7 @@ def live_telemetry_chart(df):
         legend=dict(orientation="h", y=1.08, x=0),
         xaxis=dict(showgrid=False, title=""),
         yaxis=dict(gridcolor="rgba(255,255,255,0.08)", title=""),
-        transition=dict(duration=400),
+        transition=dict(duration=250),
     )
 
     return fig
@@ -201,6 +207,10 @@ else:
     telemetry_df = fallback_telemetry()
 
 latest = telemetry_df.iloc[-1]
+telemetry_df = telemetry_df.sort_values(
+    by="timestamp"
+).tail(60)
+
 logs = load_logs()
 
 
