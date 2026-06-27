@@ -953,14 +953,22 @@ with main_right:
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
     
+        # =========================
+    # MITRE ATT&CK Mapping
+    # =========================
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
     st.markdown("""
     <div class="panel">
         <div class="section-title">MITRE ATT&CK Mapping</div>
         <div class="section-subtitle">Detected techniques from security events</div>
+    </div>
     """, unsafe_allow_html=True)
-    
+
     if detected_mitre:
         for technique in detected_mitre[:5]:
+
             st.markdown(f"""
             <div class="alert-card">
                 <span class="badge info">
@@ -981,6 +989,7 @@ with main_right:
                 </span>
             </div>
             """, unsafe_allow_html=True)
+
     else:
         st.markdown("""
         <div class="alert-card">
@@ -988,8 +997,6 @@ with main_right:
             <span class="muted">No mapped techniques detected.</span>
         </div>
         """, unsafe_allow_html=True)
-
-    st.markdown("</div>", unsafe_allow_html=True)
     # =========================
     # Security Reports
     # =========================
