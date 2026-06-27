@@ -23,6 +23,7 @@ from incidents.incident_manager import IncidentManager
 from reports.report_generator import SecurityReportGenerator
 
 from threat_intel.mitre_mapping import MitreMapper
+from analytics.threat_trends import ThreatTrendTracker
 
 
 
@@ -95,6 +96,40 @@ def fallback_telemetry():
         "voltage": [24.1 + random.uniform(-0.3, 0.3) for _ in range(40)],
     })
 
+def threat_trend_chart(history):
+    df = pd.DataFrame(history)
+
+    if df.empty:
+        return go.Figure()
+
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=df["timestamp"],
+        y=df["score"],
+        mode="lines+markers",
+        name="Threat Score",
+        line=dict(width=3, shape="spline"),
+    ))
+
+    fig.update_layout(
+        template="plotly_dark",
+        height=280,
+        margin=dict(l=10, r=10, t=20, b=10),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#E5E7EB"),
+        xaxis=dict(showgrid=False, title=""),
+        yaxis=dict(
+            gridcolor="rgba(255,255,255,0.08)",
+            title="Score",
+            range=[0, 100]
+        ),
+    )
+
+    return fig
 
 # =========================
 # Charts
@@ -236,6 +271,9 @@ mitre_mapper = MitreMapper()
 detected_mitre = mitre_mapper.get_detected_mappings(
     analytics.get_attack_counts()
 )
+trend_tracker = ThreatTrendTracker()
+trend_tracker.record_snapshot()
+threat_history = trend_tracker.get_history()
 
 latest_log = logs[-1] if logs else ""
 
