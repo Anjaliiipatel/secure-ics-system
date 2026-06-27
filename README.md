@@ -1,4 +1,4 @@
-# Secure ICS Telemetry & Detection Platform
+# Secure ICS Security Operations Platform
 
 ## Overview
 
@@ -18,7 +18,13 @@ This project models security concepts commonly found in aerospace, manufacturing
 * Real-time security monitoring dashboard
 * Centralized telemetry storage and logging
 * Industrial cyber attack simulation framework
-
+* Security analytics engine
+* Threat scoring and historical threat trends
+* Incident management system
+* Executive security report generation
+* Multi-format report export (TXT, JSON, CSV, PDF)
+* MITRE ATT&CK technique mapping
+* SOC-style operational dashboard
 ---
 
 ## Architecture
@@ -38,7 +44,14 @@ Security Gateway
       ↓
 Telemetry Storage
       ↓
-Streamlit Security Dashboard
+Security Analytics
+      ├── Threat Score
+      ├── Incident Manager
+      ├── MITRE ATT&CK Mapper
+      ├── Threat Trends
+      └── Report Generator
+      ↓
+SOC Dashboard
 ```
 
 ---
@@ -188,9 +201,28 @@ secure-ics-system/
 │   ├── telemetry.json
 │   └── system_logs.txt
 
+analytics/
+│   ├── security_analytics.py
+│   ├── threat_score.py
+│   └── threat_trends.py
+
+reports/
+│   ├── report_generator.py
+│   └── pdf_export.py
+
+threat_intel/
+│   └── mitre_mapping.py
+
+incidents/
+│   ├── incident_manager.py
+│   └── incidents.json
+
+dashboard/
+│   └── dashboard.py
 ├── docs/
 
 └── dashboard.py
+
 ```
 
 ---
