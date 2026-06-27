@@ -1,4 +1,5 @@
 import json
+import csv
 from pathlib import Path
 from datetime import datetime
 
@@ -11,6 +12,7 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 
 REPORTS_DIR = BASE_DIR / "reports"
 
+CSV_REPORT_FILE = REPORTS_DIR / "daily_security_report.csv"
 TEXT_REPORT_FILE = REPORTS_DIR / "daily_security_report.txt"
 JSON_REPORT_FILE = REPORTS_DIR / "daily_security_report.json"
 
@@ -121,11 +123,38 @@ class SecurityReportGenerator:
     def generate_all_reports(self):
         text_path = self.save_text_report()
         json_path = self.save_json_report()
+        csv_path = self.save_csv_report()
 
         return {
             "text_report": str(text_path),
-            "json_report": str(json_path)
+            "json_report": str(json_path),
+            "csv_report": str(csv_path)
         }
+
+    def save_csv_report(self):
+        REPORTS_DIR.mkdir(exist_ok=True)
+
+        report = self.generate_report_data()
+
+        rows = [
+            ["Metric", "Value"],
+            ["Generated At", report["generated_at"]],
+            ["Threat Level", report["threat_level"]],
+            ["Threat Score", report["threat_score"]],
+            ["Total Events", report["total_events"]],
+            ["Total Attacks", report["total_attacks"]],
+            ["Replay Attacks", report["replay_attacks"]],
+            ["Integrity Failures", report["integrity_failures"]],
+            ["Unauthorized Sensors", report["unauthorized_sensors"]],
+            ["Telemetry Anomalies", report["anomalies"]],
+            ["Open Incidents", report["open_incidents"]],
+        ]
+
+        with open(CSV_REPORT_FILE, "w", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            writer.writerows(rows)
+
+        return CSV_REPORT_FILE
 
 
 if __name__ == "__main__":
