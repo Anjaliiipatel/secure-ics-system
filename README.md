@@ -245,7 +245,7 @@ pip install -r requirements.txt
 Open a terminal from the project root directory:
 
 ```bash
-python -m controller.controller_api
+python -m app.py
 ```
 
 Expected Output:

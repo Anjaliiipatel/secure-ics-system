@@ -1,0 +1,28 @@
+{
+    "generated_at": "2026-06-26 23:24:44",
+    "threat_level": "CRITICAL",
+    "threat_score": 100,
+    "total_events": 1580,
+    "total_attacks": 867,
+    "replay_attacks": 21,
+    "integrity_failures": 6,
+    "unauthorized_sensors": 4,
+    "anomalies": 836,
+    "open_incidents": 2,
+    "incidents": [
+        {
+            "id": "INC-001",
+            "type": "Replay Attack",
+            "severity": "HIGH",
+            "status": "OPEN",
+            "created": "2026-06-17 16:50:29"
+        },
+        {
+            "id": "INC-002",
+            "type": "Unauthorized Sensor",
+            "severity": "MEDIUM",
+            "status": "OPEN",
+            "created": "2026-06-17 16:50:29"
+        }
+    ]
+}

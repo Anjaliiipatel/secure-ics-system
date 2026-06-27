@@ -1,6 +1,8 @@
 import sys
 from pathlib import Path
 
+from reports import report_generator
+
 BASE_DIR = Path(__file__).resolve().parents[1]
 
 if str(BASE_DIR) not in sys.path:
@@ -19,6 +21,7 @@ from streamlit_autorefresh import st_autorefresh
 from analytics.security_analytics import SecurityAnalytics
 from analytics.threat_score import ThreatScore
 from incidents.incident_manager import IncidentManager
+from reports.report_generator import SecurityReportGenerator
 
 
 # =========================
@@ -942,6 +945,19 @@ with main_right:
 
     st.markdown("</div>", unsafe_allow_html=True)
 
+    st.markdown("""
+    <div class="panel">
+    <div class="section-title">Security Reports</div>
+    <div class="section-subtitle">Generate executive security summaries</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    if st.button("Generate Security Report"):
+        reports = report_generator.generate_all_reports()
+
+    st.success("Security reports generated successfully.")
+
+    st.write(reports)
 
 # =========================
 # Footer
