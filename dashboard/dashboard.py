@@ -946,18 +946,18 @@ with main_right:
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("""
-    <div class="panel">
-    <div class="section-title">Security Reports</div>
-    <div class="section-subtitle">Generate executive security summaries</div>
-        </div>
-        """, unsafe_allow_html=True)
+                <div class="panel">
+                <div class="section-title">Security Reports</div>
+                <div class="section-subtitle">Generate executive security summaries</div>
+                </div>
+                """, unsafe_allow_html=True)
 
     if st.button("Generate Security Report"):
         reports = report_generator.generate_all_reports()
-
-    st.success("Security reports generated successfully.")
-
-    st.write(reports)
+        
+        st.success("Security reports generated successfully.")
+        
+        st.write(reports)
 
 # =========================
 # Footer
