@@ -953,7 +953,7 @@ with main_right:
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
     
-        # =========================
+    # =========================
     # MITRE ATT&CK Mapping
     # =========================
 
@@ -969,26 +969,22 @@ with main_right:
     if detected_mitre:
         for technique in detected_mitre[:5]:
 
-            st.markdown(f"""
+            technique_id = html.escape(str(technique.get("technique_id", "N/A")))
+            technique_name = html.escape(str(technique.get("technique", "Unmapped")))
+            event_type = html.escape(str(technique.get("event_type", "Security Event")))
+            tactic = html.escape(str(technique.get("tactic", "Unknown")))
+            count = technique.get("count", 0)
+
+            card_html = f"""
             <div class="alert-card">
-                <span class="badge info">
-                    {html.escape(technique.get("technique_id", "N/A"))}
-                </span><br>
-
-                <strong>
-                    {html.escape(technique.get("technique", "Unmapped"))}
-                </strong><br>
-
-                <span class="muted">
-                    {html.escape(technique.get("event_type", "Security Event"))}
-                    · Count: {technique.get("count", 0)}
-                </span><br>
-
-                <span class="muted">
-                    {html.escape(technique.get("tactic", "Unknown"))}
-                </span>
+                <span class="badge info">{technique_id}</span><br>
+                <strong>{technique_name}</strong><br>
+                <span class="muted">{event_type} · Count: {count}</span><br>
+                <span class="muted">{tactic}</span>
             </div>
-            """, unsafe_allow_html=True)
+            """
+
+            st.markdown(card_html, unsafe_allow_html=True)
 
     else:
         st.markdown("""
@@ -997,38 +993,6 @@ with main_right:
             <span class="muted">No mapped techniques detected.</span>
         </div>
         """, unsafe_allow_html=True)
-    # =========================
-    # Security Reports
-    # =========================
-    st.markdown("""
-                
-    <div class="panel">
-        <div class="section-title">Security Reports</div>
-        <div class="section-subtitle">Generate executive security summaries</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    if "generated_reports" not in st.session_state:
-        st.session_state["generated_reports"] = None
-
-    if st.button("📄 Generate Security Report"):
-        st.session_state["generated_reports"] = (
-            report_generator.generate_all_reports()
-    )
-
-    st.success("Security reports generated!")
-
-    if st.session_state["generated_reports"]:
-
-        for label, path in st.session_state["generated_reports"].items():
-
-            with open(path, "rb") as file:
-                st.download_button(
-                    label=f"Download {label}",
-                    data=file,
-                    file_name=Path(path).name,
-                    mime="application/octet-stream"
-                )
 
 # =========================
 # Footer
