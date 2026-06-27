@@ -95,4 +95,4 @@ if __name__ == "__main__":
 
         send_packet()
 
-        time.sleep(2)
+        time.sleep(0.5)
