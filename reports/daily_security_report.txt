@@ -2,7 +2,7 @@
         SECURE ICS DAILY SECURITY REPORT
 ================================================
 
-Generated At: 2026-06-27 00:10:47
+Generated At: 2026-06-27 00:23:36
 
 Security Posture
 ----------------
@@ -11,12 +11,12 @@ Threat Score: 100/100
 
 Security Event Summary
 ----------------------
-Total Events: 5935
-Total Attacks: 3323
+Total Events: 9052
+Total Attacks: 5051
 Replay Attacks: 21
 Integrity Failures: 6
 Unauthorized Sensors: 4
-Telemetry Anomalies: 3292
+Telemetry Anomalies: 5020
 
 Incident Summary
 ----------------

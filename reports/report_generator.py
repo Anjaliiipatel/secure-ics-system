@@ -6,6 +6,7 @@ from datetime import datetime
 from analytics.security_analytics import SecurityAnalytics
 from analytics.threat_score import ThreatScore
 from incidents.incident_manager import IncidentManager
+from reports.pdf_export import generate_pdf_report
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -125,11 +126,15 @@ class SecurityReportGenerator:
         json_path = self.save_json_report()
         csv_path = self.save_csv_report()
 
+        report_data = self.generate_report_data()
+        pdf_path = generate_pdf_report(report_data)
+
         return {
             "text_report": str(text_path),
             "json_report": str(json_path),
-            "csv_report": str(csv_path)
-        }
+            "csv_report": str(csv_path),
+            "pdf_report": str(pdf_path)
+    }
 
     def save_csv_report(self):
         REPORTS_DIR.mkdir(exist_ok=True)
