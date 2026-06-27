@@ -134,6 +134,13 @@ Monitors telemetry behavior for:
 
 Stores accepted telemetry and security events for analysis and visualization.
 
+## Security Intelligence
+* Threat Score Engine
+* Incident Manager
+* MITRE ATT&CK Mapping
+* Historical Threat Tracking
+* Executive Report Generator
+  
 ### Security Dashboard
 
 Provides real-time visibility into:
@@ -143,7 +150,20 @@ Provides real-time visibility into:
 * Attack activity
 * Operational status
 * Security metrics
+* Threat Score
+* Threat Level
+* Open Incidents
+* MITRE ATT&CK Techniques
+* Historical Threat Trend
 
+## Security Reports
+
+Document that the platform generates:
+
+* TXT reports
+* JSON reports
+* CSV reports
+* PDF executive reports
 ---
 
 ## Attack Simulation Framework
@@ -428,8 +448,6 @@ logs/
 * Role-Based Access Control (RBAC)
 * Secure secret management
 * Distributed multi-node deployment
-* Automated incident response workflows
-* Threat correlation and analytics
 
 ---
 
