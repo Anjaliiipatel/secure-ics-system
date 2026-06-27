@@ -22,6 +22,9 @@ from analytics.threat_score import ThreatScore
 from incidents.incident_manager import IncidentManager
 from reports.report_generator import SecurityReportGenerator
 
+from threat_intel.mitre_mapping import MitreMapper
+
+
 
 # =========================
 # Page Config
@@ -223,12 +226,16 @@ logs = load_logs()
 analytics = SecurityAnalytics()
 threat_engine = ThreatScore()
 incident_manager = IncidentManager()
-
 dashboard_summary = analytics.get_dashboard_summary()
 attack_distribution = analytics.get_attack_percentages()
 threat_data = threat_engine.get_dashboard_data()
 open_incidents = incident_manager.get_open_incidents()
 report_generator = SecurityReportGenerator()
+mitre_mapper = MitreMapper()
+
+detected_mitre = mitre_mapper.get_detected_mappings(
+    analytics.get_attack_counts()
+)
 
 latest_log = logs[-1] if logs else ""
 
@@ -944,13 +951,50 @@ with main_right:
         """, unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="panel">
+        <div class="section-title">MITRE ATT&CK Mapping</div>
+        <div class="section-subtitle">Detected techniques from security events</div>
+    """, unsafe_allow_html=True)
+    
+    if detected_mitre:
+        for technique in detected_mitre[:5]:
+            st.markdown(f"""
+            <div class="alert-card">
+                <span class="badge info">
+                    {html.escape(technique.get("technique_id", "N/A"))}
+                </span><br>
+
+                <strong>
+                    {html.escape(technique.get("technique", "Unmapped"))}
+                </strong><br>
+
+                <span class="muted">
+                    {html.escape(technique.get("event_type", "Security Event"))}
+                    · Count: {technique.get("count", 0)}
+                </span><br>
+
+                <span class="muted">
+                    {html.escape(technique.get("tactic", "Unknown"))}
+                </span>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div class="alert-card">
+            <span class="badge success">CLEAR</span><br>
+            <span class="muted">No mapped techniques detected.</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
     # =========================
     # Security Reports
     # =========================
-
-    
-
     st.markdown("""
+                
     <div class="panel">
         <div class="section-title">Security Reports</div>
         <div class="section-subtitle">Generate executive security summaries</div>
