@@ -18,14 +18,14 @@
     </div>
 
     <nav>
-      <a class="active">⌂ Dashboard</a>
-      <a>⇄ Telemetry</a>
-      <a>🛡 Security Events</a>
-      <a>⚠ Attack Monitor</a>
-      <a>▣ Incidents</a>
-      <a>⌁ Threat Intel</a>
-      <a>☰ Reports</a>
-      <a>⚙ Settings</a>
+      <a class="active" href="#dashboard">⌂ Dashboard</a>
+      <a href="#telemetry">⇄ Telemetry</a>
+      <a href="#attack-monitor">⚠ Attack Monitor</a>
+      <a href="#threat-intel">⌁ Threat Intel</a>
+      <a href="#incidents">▣ Incidents</a>
+      <a href="#events-section">🛡 Security Events</a>
+      <a href="#reports">☰ Reports</a>
+      <a href="#system-overview">⚙ System</a>
     </nav>
 
     <div class="zero-trust">
@@ -35,12 +35,12 @@
     </div>
   </aside>
 
-  <main class="main">
+  <main id="dashboard" class="main">
     <header class="topbar">
       <div>
         <p class="eyebrow">Industrial Security Operations Center</p>
         <h1>Secure ICS SOC Dashboard</h1>
-        <p>Real-time telemetry, threat detection, incident tracking, and reporting</p>
+        <p>Real-time telemetry, threat detection, incident tracking, and security reporting.</p>
       </div>
 
       <div class="top-status">
@@ -75,7 +75,7 @@
       </div>
     </section>
 
-    <section class="layout">
+    <section id="telemetry" class="layout">
       <div class="panel">
         <div class="panel-header">
           <div>
@@ -112,7 +112,7 @@
         </div>
       </div>
 
-      <div class="panel attack-panel">
+      <div id="attack-monitor" class="panel attack-panel">
         <div class="panel-header">
           <h2>Attack Monitor</h2>
           <span id="attack-status" class="active-pill">0 Active</span>
@@ -136,7 +136,7 @@
     </section>
 
     <section class="layout bottom">
-      <div class="panel">
+      <div id="threat-intel" class="panel">
         <div class="panel-header">
           <div>
             <h2>Threat Intelligence</h2>
@@ -148,7 +148,7 @@
         <div id="mitre-techniques" class="mitre-list"></div>
       </div>
 
-      <div class="panel">
+      <div id="events-section" class="panel">
         <div class="panel-header">
           <div>
             <h2>Recent Security Events</h2>
@@ -162,7 +162,7 @@
     </section>
 
     <section class="layout bottom">
-      <div class="panel">
+      <div id="incidents" class="panel">
         <div class="panel-header">
           <div>
             <h2>Incident Queue</h2>
@@ -189,7 +189,7 @@
         </div>
       </div>
 
-      <div class="panel">
+      <div id="reports" class="panel">
         <div class="panel-header">
           <div>
             <h2>Security Reports</h2>
@@ -199,20 +199,22 @@
         </div>
 
         <div class="report-grid">
-          <div class="report-card">
-            <strong>Daily Security Report</strong>
-            <span>Generated from current telemetry and security events.</span>
-          </div>
+          <button class="report-card" id="generate-report">
+            <strong>Generate Security Report</strong>
+            <span>Create updated TXT, JSON, CSV, and PDF reports.</span>
+          </button>
 
           <div class="report-card">
             <strong>Executive PDF</strong>
             <span>Threat score, incidents, recommendations, and analytics.</span>
           </div>
         </div>
+
+        <p id="report-status" class="report-status">Reports engine ready.</p>
       </div>
     </section>
 
-    <section class="panel">
+    <section id="system-overview" class="panel">
       <div class="panel-header">
         <div>
           <h2>System Overview</h2>

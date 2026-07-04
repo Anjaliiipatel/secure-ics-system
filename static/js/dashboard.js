@@ -4,21 +4,16 @@
 // =========================================
 
 function updateClock() {
-    const clock = document.getElementById("clock");
+  const clock = document.getElementById("clock");
 
-    if (!clock) return;
+  if (!clock) return;
 
-    const now = new Date();
-
-    clock.innerHTML = now.toLocaleString();
+  const now = new Date();
+  clock.textContent = now.toLocaleString();
 }
 
-// =========================================
-
-function random(min, max, decimals = 1) {
-    return (
-        Math.random() * (max - min) + min
-    ).toFixed(decimals);
+function randomBetween(min, max, decimals = 1) {
+  return (Math.random() * (max - min) + min).toFixed(decimals);
 }
 
 // =========================================
@@ -26,20 +21,15 @@ function random(min, max, decimals = 1) {
 // =========================================
 
 function updateTelemetry() {
+  const temp = document.getElementById("temp");
+  const pressure = document.getElementById("pressure");
+  const rpm = document.getElementById("rpm");
+  const vibration = document.getElementById("vibration");
 
-    document.getElementById("temp").innerHTML =
-        random(68, 84);
-
-    document.getElementById("pressure").innerHTML =
-        random(135, 150);
-
-    document.getElementById("rpm").innerHTML =
-        Math.floor(
-            Math.random() * (2600 - 2200) + 2200
-        );
-
-    document.getElementById("vibration").innerHTML =
-        random(1.8, 3.2, 2);
+  if (temp) temp.textContent = randomBetween(68, 84, 1);
+  if (pressure) pressure.textContent = randomBetween(135, 150, 1);
+  if (rpm) rpm.textContent = Math.floor(Math.random() * (2600 - 2200) + 2200);
+  if (vibration) vibration.textContent = randomBetween(1.8, 3.2, 2);
 }
 
 // =========================================
@@ -47,40 +37,25 @@ function updateTelemetry() {
 // =========================================
 
 function updateThreatScore() {
+  const scoreElement = document.getElementById("threat-score");
+  const labelElement = document.getElementById("threat-label");
 
-    const score = Math.floor(
-        Math.random() * 60 + 10
-    );
+  if (!scoreElement || !labelElement) return;
 
-    document.getElementById("threat-score").innerHTML =
-        score;
+  const score = Math.floor(Math.random() * 70 + 12);
 
-    const label =
-        document.getElementById("threat-label");
+  scoreElement.textContent = score;
 
-    if (score < 25) {
-
-        label.innerHTML = "LOW";
-
-        label.style.color = "#00ff9d";
-
-    }
-
-    else if (score < 50) {
-
-        label.innerHTML = "MEDIUM";
-
-        label.style.color = "#ffc857";
-
-    }
-
-    else {
-
-        label.innerHTML = "HIGH";
-
-        label.style.color = "#ff5c8d";
-
-    }
+  if (score < 30) {
+    labelElement.textContent = "LOW";
+    labelElement.style.color = "#00ff9d";
+  } else if (score < 55) {
+    labelElement.textContent = "MEDIUM";
+    labelElement.style.color = "#ffc857";
+  } else {
+    labelElement.textContent = "HIGH";
+    labelElement.style.color = "#ff5c8d";
+  }
 }
 
 // =========================================
@@ -88,234 +63,220 @@ function updateThreatScore() {
 // =========================================
 
 const attackStates = [
-
-    {
-        title: "No Active Attacks",
-        subtitle: "Security Gateway monitoring telemetry.",
-        badge: "0 Active"
-    },
-
-    {
-        title: "Replay Attack Blocked",
-        subtitle: "Replay detector rejected duplicated telemetry.",
-        badge: "1 Active"
-    },
-
-    {
-        title: "Unauthorized Sensor",
-        subtitle: "Authentication policy rejected rogue node.",
-        badge: "2 Active"
-    },
-
-    {
-        title: "Telemetry Tampering",
-        subtitle: "Integrity validation failed.",
-        badge: "1 Active"
-    }
-
+  {
+    title: "No Active Attacks",
+    subtitle: "Security Gateway is monitoring telemetry traffic.",
+    badge: "0 Active",
+    shield: "✓"
+  },
+  {
+    title: "Replay Attack Blocked",
+    subtitle: "Replay detector rejected duplicated telemetry.",
+    badge: "1 Active",
+    shield: "!"
+  },
+  {
+    title: "Unauthorized Sensor",
+    subtitle: "Authentication policy rejected rogue device.",
+    badge: "1 Active",
+    shield: "!"
+  },
+  {
+    title: "Telemetry Tampering",
+    subtitle: "HMAC integrity validation failed.",
+    badge: "1 Active",
+    shield: "!"
+  },
+  {
+    title: "Flood Pattern Logged",
+    subtitle: "High-volume telemetry pattern detected.",
+    badge: "2 Active",
+    shield: "!"
+  }
 ];
 
 function updateAttackMonitor() {
+  const title = document.getElementById("attack-title");
+  const subtitle = document.getElementById("attack-subtitle");
+  const status = document.getElementById("attack-status");
+  const shield = document.querySelector(".shield");
 
-    const attack =
-        attackStates[
-            Math.floor(
-                Math.random() *
-                attackStates.length
-            )
-        ];
+  if (!title || !subtitle || !status) return;
 
-    document.getElementById("attack-title")
-        .innerHTML = attack.title;
+  const attack = attackStates[Math.floor(Math.random() * attackStates.length)];
 
-    document.getElementById("attack-subtitle")
-        .innerHTML = attack.subtitle;
+  title.textContent = attack.title;
+  subtitle.textContent = attack.subtitle;
+  status.textContent = attack.badge;
 
-    document.getElementById("attack-status")
-        .innerHTML = attack.badge;
+  if (shield) {
+    shield.textContent = attack.shield;
+  }
 }
 
 // =========================================
-// Recent Security Events
+// Security Events
 // =========================================
 
-const events = [
-
-    "Telemetry packet validated",
-
-    "Replay attack detected",
-
-    "Threat score updated",
-
-    "Sensor authenticated",
-
-    "MITRE ATT&CK mapping generated",
-
-    "Incident queue synchronized",
-
-    "Integrity validation passed",
-
-    "Telemetry anomaly detected",
-
-    "Flood attack blocked",
-
-    "Security report generated"
-
+const normalEvents = [
+  "Telemetry packet validated by Security Gateway",
+  "HMAC-SHA256 integrity verification passed",
+  "Sensor authentication validated",
+  "Replay detection window cleared",
+  "Anomaly detection scan completed",
+  "Threat score recalculated",
+  "MITRE ATT&CK mapping updated",
+  "Incident queue synchronized",
+  "Security report engine ready",
+  "Controller API health check passed"
 ];
 
+const attackEvents = [
+  "Replay Attack blocked",
+  "Unauthorized Sensor rejected",
+  "Integrity Failure detected",
+  "Telemetry Anomaly generated",
+  "Flooding pattern logged",
+  "Tampered packet rejected"
+];
+
+function createEvent(message, isDanger = false) {
+  const event = document.createElement("div");
+  event.className = isDanger ? "event danger" : "event";
+
+  const time = new Date().toLocaleTimeString();
+
+  event.innerHTML = `
+    <div>
+      <strong>${message}</strong><br>
+      <span>Security Monitoring</span>
+    </div>
+    <span>${time}</span>
+  `;
+
+  return event;
+}
+
 function updateEvents() {
+  const events = document.getElementById("events");
 
-    const container =
-        document.getElementById("events");
+  if (!events) return;
 
-    if (!container) return;
+  const isDanger = Math.random() > 0.72;
 
-    const event =
-        events[
-            Math.floor(
-                Math.random() *
-                events.length
-            )
-        ];
+  const message = isDanger
+    ? attackEvents[Math.floor(Math.random() * attackEvents.length)]
+    : normalEvents[Math.floor(Math.random() * normalEvents.length)];
 
-    const time =
-        new Date().toLocaleTimeString();
+  events.prepend(createEvent(message, isDanger));
 
-    const div =
-        document.createElement("div");
-
-    div.className = "event";
-
-    div.innerHTML = `
-        <div>
-            <strong>${event}</strong><br>
-            <span>Security Monitoring</span>
-        </div>
-
-        <span>${time}</span>
-    `;
-
-    container.prepend(div);
-
-    while (container.children.length > 6) {
-
-        container.removeChild(
-            container.lastChild
-        );
-
-    }
-
+  while (events.children.length > 7) {
+    events.removeChild(events.lastChild);
+  }
 }
 
 // =========================================
 // MITRE ATT&CK
 // =========================================
 
-const mitre = [
-
-    {
-        id: "T1557",
-        name: "Adversary-in-the-Middle"
-    },
-
-    {
-        id: "T1565",
-        name: "Data Manipulation"
-    },
-
-    {
-        id: "T1499",
-        name: "Endpoint DoS"
-    },
-
-    {
-        id: "T1036",
-        name: "Masquerading"
-    },
-
-    {
-        id: "T0831",
-        name: "Manipulation of Control"
-    }
-
+const mitreTechniques = [
+  ["T1557", "Adversary-in-the-Middle"],
+  ["T1565", "Data Manipulation"],
+  ["T1036", "Masquerading"],
+  ["T1499", "Endpoint DoS"],
+  ["T0831", "Manipulation of Control"]
 ];
 
 function updateMITRE() {
+  const mitre = document.getElementById("mitre-techniques");
 
-    const container =
-        document.getElementById(
-            "mitre-techniques"
-        );
+  if (!mitre) return;
 
-    if (!container) return;
+  mitre.innerHTML = "";
 
-    container.innerHTML = "";
+  mitreTechniques.forEach(([id, name]) => {
+    const item = document.createElement("div");
+    item.className = "mitre-item";
 
-    mitre.forEach(item => {
+    item.innerHTML = `
+      <strong>${id}</strong>
+      <span>${name}</span>
+    `;
 
-        container.innerHTML += `
-
-        <div class="mitre-item">
-
-            <strong>${item.id}</strong>
-
-            <span>${item.name}</span>
-
-        </div>
-
-        `;
-
-    });
-
+    mitre.appendChild(item);
+  });
 }
 
 // =========================================
-// Incident Counter
+// Incident Count
 // =========================================
 
-function updateIncidents() {
+function updateIncidentCount() {
+  const count = document.getElementById("incident-count");
 
-    const count =
-        Math.floor(
-            Math.random() * 6
-        );
+  if (!count) return;
 
-    document.getElementById(
-        "incident-count"
-    ).innerHTML = count;
+  count.textContent = Math.floor(Math.random() * 5 + 1);
+}
 
+// =========================================
+// Reports Button
+// =========================================
+
+function setupReportsButton() {
+  const button = document.getElementById("generate-report");
+  const status = document.getElementById("report-status");
+
+  if (!button || !status) return;
+
+  button.addEventListener("click", () => {
+    status.textContent = "Generating reports...";
+
+    setTimeout(() => {
+      const now = new Date().toLocaleTimeString();
+      status.textContent = `Reports generated successfully at ${now}.`;
+    }, 800);
+  });
+}
+
+// =========================================
+// Sidebar Active Link
+// =========================================
+
+function setupNavigation() {
+  const links = document.querySelectorAll("nav a");
+
+  links.forEach((link) => {
+    link.addEventListener("click", () => {
+      links.forEach((item) => item.classList.remove("active"));
+      link.classList.add("active");
+    });
+  });
 }
 
 // =========================================
 // Boot
 // =========================================
 
-updateClock();
+function bootDashboard() {
+  updateClock();
+  updateTelemetry();
+  updateThreatScore();
+  updateAttackMonitor();
+  updateEvents();
+  updateMITRE();
+  updateIncidentCount();
 
-updateTelemetry();
+  setupReportsButton();
+  setupNavigation();
 
-updateThreatScore();
+  setInterval(updateClock, 1000);
+  setInterval(updateTelemetry, 2000);
+  setInterval(updateThreatScore, 3000);
+  setInterval(updateAttackMonitor, 5000);
+  setInterval(updateEvents, 3500);
+  setInterval(updateIncidentCount, 4500);
+  setInterval(updateMITRE, 8000);
+}
 
-updateAttackMonitor();
-
-updateEvents();
-
-updateMITRE();
-
-updateIncidents();
-
-// =========================================
-
-setInterval(updateClock, 1000);
-
-setInterval(updateTelemetry, 2000);
-
-setInterval(updateThreatScore, 3000);
-
-setInterval(updateAttackMonitor, 5000);
-
-setInterval(updateEvents, 3500);
-
-setInterval(updateIncidents, 4000);
-
-setInterval(updateMITRE, 8000);
+document.addEventListener("DOMContentLoaded", bootDashboard);
