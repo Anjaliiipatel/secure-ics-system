@@ -3,27 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Secure ICS Dashboard</title>
+  <title>Secure ICS SOC Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
+
 <body>
   <aside class="sidebar">
     <div class="brand">
       <div class="logo">⛨</div>
       <div>
         <h2>SECURE ICS</h2>
-        <p>CONTROL SYSTEM</p>
+        <p>SECURITY OPERATIONS</p>
       </div>
     </div>
 
     <nav>
       <a class="active">⌂ Dashboard</a>
       <a>⇄ Telemetry</a>
-      <a>◉ Sensors</a>
       <a>🛡 Security Events</a>
       <a>⚠ Attack Monitor</a>
       <a>▣ Incidents</a>
-      <a>⌁ Analytics</a>
+      <a>⌁ Threat Intel</a>
       <a>☰ Reports</a>
       <a>⚙ Settings</a>
     </nav>
@@ -38,12 +38,14 @@
   <main class="main">
     <header class="topbar">
       <div>
-        <h1>ICS Telemetry Dashboard</h1>
-        <p>Real-time Monitoring & Threat Detection</p>
+        <p class="eyebrow">Industrial Security Operations Center</p>
+        <h1>Secure ICS SOC Dashboard</h1>
+        <p>Real-time telemetry, threat detection, incident tracking, and reporting</p>
       </div>
+
       <div class="top-status">
         <span id="clock">--:--:--</span>
-        <span class="secure-pill">System Secure</span>
+        <span class="secure-pill">● Gateway Online</span>
       </div>
     </header>
 
@@ -51,29 +53,35 @@
       <div class="stat-card glow-green">
         <p>System Status</p>
         <h2>SECURE</h2>
-        <span>All systems operational</span>
+        <span>All core services online</span>
       </div>
+
       <div class="stat-card">
-        <p>Active Sensors</p>
-        <h2 id="sensor-count">4</h2>
-        <span>Online</span>
+        <p>Threat Level</p>
+        <h2 id="threat-label">LOW</h2>
+        <span>Current risk posture</span>
       </div>
-      <div class="stat-card">
-        <p>Telemetry Rate</p>
-        <h2><span id="telemetry-rate">12.4</span>/s</h2>
-        <span>Events per second</span>
-      </div>
+
       <div class="stat-card glow-purple">
         <p>Threat Score</p>
-        <h2 id="threat-score">18</h2>
-        <span>Low Risk</span>
+        <h2><span id="threat-score">18</span>/100</h2>
+        <span>Live risk index</span>
+      </div>
+
+      <div class="stat-card">
+        <p>Open Incidents</p>
+        <h2 id="incident-count">3</h2>
+        <span>Active security cases</span>
       </div>
     </section>
 
     <section class="layout">
       <div class="panel">
         <div class="panel-header">
-          <h2>Live Telemetry</h2>
+          <div>
+            <h2>Live Telemetry</h2>
+            <p>Temperature · Pressure · RPM · Vibration</p>
+          </div>
           <span class="live-dot">● Live</span>
         </div>
 
@@ -83,16 +91,19 @@
             <h3><span id="temp">72.6</span> °C</h3>
             <div class="sparkline"></div>
           </div>
+
           <div class="metric">
             <p>Pressure</p>
             <h3><span id="pressure">145.3</span> PSI</h3>
             <div class="sparkline purple"></div>
           </div>
+
           <div class="metric">
             <p>RPM</p>
             <h3><span id="rpm">2450</span></h3>
             <div class="sparkline pink"></div>
           </div>
+
           <div class="metric">
             <p>Vibration</p>
             <h3><span id="vibration">2.35</span> mm/s</h3>
@@ -104,44 +115,117 @@
       <div class="panel attack-panel">
         <div class="panel-header">
           <h2>Attack Monitor</h2>
-          <span class="active-pill">0 Active</span>
+          <span id="attack-status" class="active-pill">0 Active</span>
         </div>
 
         <div class="radar">
-          <div class="radar-circle"></div>
           <div class="shield">✓</div>
         </div>
 
-        <h2 class="purple-text">No Active Attacks</h2>
-        <p>The system is currently secure.</p>
+        <h2 id="attack-title" class="purple-text">No Active Attacks</h2>
+        <p id="attack-subtitle">Security Gateway is monitoring telemetry traffic.</p>
 
         <ul class="checks">
-          <li>✓ Network Traffic: Normal</li>
-          <li>✓ Authentication: Valid</li>
-          <li>✓ Data Integrity: Intact</li>
-          <li>✓ Anomaly Detection: Normal</li>
-          <li>✓ Threat Intelligence: Clear</li>
+          <li>✓ HMAC integrity validation</li>
+          <li>✓ Sensor authentication</li>
+          <li>✓ Replay detection</li>
+          <li>✓ Anomaly monitoring</li>
+          <li>✓ MITRE mapping enabled</li>
         </ul>
       </div>
     </section>
 
     <section class="layout bottom">
       <div class="panel">
-        <h2>System Overview</h2>
-        <div class="overview-grid">
-          <div>Sensor Nodes<br><strong>4 / 4 Online</strong></div>
-          <div>Gateway<br><strong>Online</strong></div>
-          <div>Controller API<br><strong>Online</strong></div>
-          <div>Security Engine<br><strong>Monitoring</strong></div>
+        <div class="panel-header">
+          <div>
+            <h2>Threat Intelligence</h2>
+            <p>Detected MITRE ATT&CK mappings</p>
+          </div>
+          <span>ATT&CK</span>
+        </div>
+
+        <div id="mitre-techniques" class="mitre-list"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Recent Security Events</h2>
+            <p>Live activity timeline</p>
+          </div>
+          <span>View All</span>
+        </div>
+
+        <div id="events" class="events"></div>
+      </div>
+    </section>
+
+    <section class="layout bottom">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Incident Queue</h2>
+            <p>Active security cases</p>
+          </div>
+          <span>Open</span>
+        </div>
+
+        <div class="incident-list">
+          <div class="incident high">
+            <strong>INC-001</strong>
+            <span>Replay Attack · HIGH</span>
+          </div>
+
+          <div class="incident critical">
+            <strong>INC-002</strong>
+            <span>Integrity Failure · CRITICAL</span>
+          </div>
+
+          <div class="incident medium">
+            <strong>INC-003</strong>
+            <span>Unauthorized Sensor · MEDIUM</span>
+          </div>
         </div>
       </div>
 
       <div class="panel">
         <div class="panel-header">
-          <h2>Recent Security Events</h2>
-          <span>View All</span>
+          <div>
+            <h2>Security Reports</h2>
+            <p>Executive reporting exports</p>
+          </div>
+          <span>TXT · JSON · CSV · PDF</span>
         </div>
-        <div id="events" class="events"></div>
+
+        <div class="report-grid">
+          <div class="report-card">
+            <strong>Daily Security Report</strong>
+            <span>Generated from current telemetry and security events.</span>
+          </div>
+
+          <div class="report-card">
+            <strong>Executive PDF</strong>
+            <span>Threat score, incidents, recommendations, and analytics.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>System Overview</h2>
+          <p>Core industrial security services</p>
+        </div>
+        <span class="live-dot">● Operational</span>
+      </div>
+
+      <div class="overview-grid">
+        <div>Sensor Nodes<br><strong>4 / 4 Online</strong></div>
+        <div>Controller API<br><strong>Online</strong></div>
+        <div>Security Gateway<br><strong>Monitoring</strong></div>
+        <div>Report Engine<br><strong>Ready</strong></div>
       </div>
     </section>
   </main>
