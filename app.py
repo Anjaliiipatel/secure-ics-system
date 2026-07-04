@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from controller.controller_api import telemetry_bp
 
 app = Flask(__name__)
