@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure ICS Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">⛨</div>
+      <div>
+        <h2>SECURE ICS</h2>
+        <p>CONTROL SYSTEM</p>
+      </div>
+    </div>
+
+    <nav>
+      <a class="active">⌂ Dashboard</a>
+      <a>⇄ Telemetry</a>
+      <a>◉ Sensors</a>
+      <a>🛡 Security Events</a>
+      <a>⚠ Attack Monitor</a>
+      <a>▣ Incidents</a>
+      <a>⌁ Analytics</a>
+      <a>☰ Reports</a>
+      <a>⚙ Settings</a>
+    </nav>
+
+    <div class="zero-trust">
+      <h3>ZERO TRUST</h3>
+      <p>Continuous Verification</p>
+      <p>Never Trust, Always Verify</p>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1>ICS Telemetry Dashboard</h1>
+        <p>Real-time Monitoring & Threat Detection</p>
+      </div>
+      <div class="top-status">
+        <span id="clock">--:--:--</span>
+        <span class="secure-pill">System Secure</span>
+      </div>
+    </header>
+
+    <section class="stats-grid">
+      <div class="stat-card glow-green">
+        <p>System Status</p>
+        <h2>SECURE</h2>
+        <span>All systems operational</span>
+      </div>
+      <div class="stat-card">
+        <p>Active Sensors</p>
+        <h2 id="sensor-count">4</h2>
+        <span>Online</span>
+      </div>
+      <div class="stat-card">
+        <p>Telemetry Rate</p>
+        <h2><span id="telemetry-rate">12.4</span>/s</h2>
+        <span>Events per second</span>
+      </div>
+      <div class="stat-card glow-purple">
+        <p>Threat Score</p>
+        <h2 id="threat-score">18</h2>
+        <span>Low Risk</span>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Live Telemetry</h2>
+          <span class="live-dot">● Live</span>
+        </div>
+
+        <div class="telemetry-grid">
+          <div class="metric">
+            <p>Temperature</p>
+            <h3><span id="temp">72.6</span> °C</h3>
+            <div class="sparkline"></div>
+          </div>
+          <div class="metric">
+            <p>Pressure</p>
+            <h3><span id="pressure">145.3</span> PSI</h3>
+            <div class="sparkline purple"></div>
+          </div>
+          <div class="metric">
+            <p>RPM</p>
+            <h3><span id="rpm">2450</span></h3>
+            <div class="sparkline pink"></div>
+          </div>
+          <div class="metric">
+            <p>Vibration</p>
+            <h3><span id="vibration">2.35</span> mm/s</h3>
+            <div class="sparkline cyan"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel attack-panel">
+        <div class="panel-header">
+          <h2>Attack Monitor</h2>
+          <span class="active-pill">0 Active</span>
+        </div>
+
+        <div class="radar">
+          <div class="radar-circle"></div>
+          <div class="shield">✓</div>
+        </div>
+
+        <h2 class="purple-text">No Active Attacks</h2>
+        <p>The system is currently secure.</p>
+
+        <ul class="checks">
+          <li>✓ Network Traffic: Normal</li>
+          <li>✓ Authentication: Valid</li>
+          <li>✓ Data Integrity: Intact</li>
+          <li>✓ Anomaly Detection: Normal</li>
+          <li>✓ Threat Intelligence: Clear</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="layout bottom">
+      <div class="panel">
+        <h2>System Overview</h2>
+        <div class="overview-grid">
+          <div>Sensor Nodes<br><strong>4 / 4 Online</strong></div>
+          <div>Gateway<br><strong>Online</strong></div>
+          <div>Controller API<br><strong>Online</strong></div>
+          <div>Security Engine<br><strong>Monitoring</strong></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Recent Security Events</h2>
+          <span>View All</span>
+        </div>
+        <div id="events" class="events"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
