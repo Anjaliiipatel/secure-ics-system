@@ -7,6 +7,8 @@ from security.replay_detection import ReplayDetector
 from security.anomaly_detection import AnomalyDetector
 from security.sensor_registry import SensorRegistry
 from incidents.incident_manager import IncidentManager
+from threat_hunting.ioc_engine import IOCEngine
+from rules.detection_rules import DetectionRules
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -32,6 +34,10 @@ class SecurityGateway:
         self.sensor_registry = SensorRegistry()
 
         self.incident_manager = IncidentManager()
+
+        self.ioc_engine = IOCEngine()
+
+        self.detection_rules = DetectionRules()
 
         # =============================================
         # Gateway Statistics
@@ -138,6 +144,19 @@ class SecurityGateway:
                 "Authentication Failure",
                 "CRITICAL"
             )
+            self.ioc_engine.create_ioc(
+                "Authentication Failure",
+                "CRITICAL",
+                source=packet.get("sensor_id", "unknown"),
+                description="Telemetry packet failed authentication validation."
+            )
+            self.ioc_engine.create_ioc(
+                "Unauthorized Sensor",
+                "HIGH",
+                source=packet.get("sensor_id", "unknown"),
+                description="Unauthorized device attempted to send telemetry."
+            )
+
         # ---------------------------------------------
         # STEP 4
         # Anomaly Detection
@@ -166,7 +185,12 @@ class SecurityGateway:
         )
 
         if alerts:
-
+            self.ioc_engine.create_ioc(
+                "Telemetry Anomaly",
+                "MEDIUM",
+                source=packet.get("sensor_id", "unknown"),
+                description="Abnormal telemetry behavior detected."
+        )
             self.stats[
                 "anomalies_detected"
             ] += len(alerts)
@@ -270,3 +294,4 @@ if __name__ == "__main__":
     print(
         gateway.get_stats()
     )
+
