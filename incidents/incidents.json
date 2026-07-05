@@ -26,5 +26,26 @@
         "severity": "CRITICAL",
         "status": "OPEN",
         "created": "2026-07-05 00:01:03"
+    },
+    {
+        "id": "INC-005",
+        "type": "Replay Attack",
+        "severity": "HIGH",
+        "status": "OPEN",
+        "created": "2026-07-05 00:46:25"
+    },
+    {
+        "id": "INC-006",
+        "type": "Replay Attack",
+        "severity": "HIGH",
+        "status": "OPEN",
+        "created": "2026-07-05 00:46:25"
+    },
+    {
+        "id": "INC-007",
+        "type": "Replay Attack",
+        "severity": "HIGH",
+        "status": "OPEN",
+        "created": "2026-07-05 00:46:25"
     }
 ]

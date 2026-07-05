@@ -189,20 +189,34 @@ function updateEvents() {
 
     events.innerHTML = "";
 
+    if (!data.events || data.events.length === 0) {
+      events.innerHTML = `
+        <div class="event">
+          <div>
+            <strong>Waiting for security events...</strong><br>
+            <span>Start telemetry client or run an attack simulation</span>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
     data.events.slice(-7).reverse().forEach((line) => {
+      const text = String(line).trim();
+
       const isDanger =
-        line.includes("CRITICAL") ||
-        line.includes("HIGH") ||
-        line.includes("Replay") ||
-        line.includes("Integrity") ||
-        line.includes("Unauthorized");
+        text.includes("CRITICAL") ||
+        text.includes("HIGH") ||
+        text.includes("Replay") ||
+        text.includes("Integrity") ||
+        text.includes("Unauthorized");
 
       const div = document.createElement("div");
       div.className = isDanger ? "event danger" : "event";
 
       div.innerHTML = `
         <div>
-          <strong>${line.trim()}</strong><br>
+          <strong>${text}</strong><br>
           <span>Security Monitoring</span>
         </div>
       `;
@@ -212,6 +226,15 @@ function updateEvents() {
 
   } catch (error) {
     console.log("Events API error:", error);
+
+    events.innerHTML = `
+      <div class="event danger">
+        <div>
+          <strong>Security Events API unavailable</strong><br>
+          <span>Check /api/events and Flask logs</span>
+        </div>
+      </div>
+    `;
   }
 }
 }

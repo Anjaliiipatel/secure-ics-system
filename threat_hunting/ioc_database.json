@@ -16,5 +16,275 @@
         "source": "temp_01",
         "status": "ACTIVE",
         "description": "Telemetry packet failed HMAC integrity validation."
+    },
+    {
+        "id": "IOC-003",
+        "timestamp": "2026-07-05 00:46:25",
+        "type": "Replay Attack",
+        "severity": "HIGH",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Replay attack indicator detected from telemetry timestamp."
+    },
+    {
+        "id": "IOC-004",
+        "timestamp": "2026-07-05 00:46:25",
+        "type": "Replay Attack",
+        "severity": "HIGH",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Replay attack indicator detected from telemetry timestamp."
+    },
+    {
+        "id": "IOC-005",
+        "timestamp": "2026-07-05 00:46:25",
+        "type": "Replay Attack",
+        "severity": "HIGH",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Replay attack indicator detected from telemetry timestamp."
+    },
+    {
+        "id": "IOC-006",
+        "timestamp": "2026-07-05 00:51:56",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-007",
+        "timestamp": "2026-07-05 00:51:57",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-008",
+        "timestamp": "2026-07-05 00:51:57",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-009",
+        "timestamp": "2026-07-05 00:51:58",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-010",
+        "timestamp": "2026-07-05 00:51:59",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-011",
+        "timestamp": "2026-07-05 00:52:00",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-012",
+        "timestamp": "2026-07-05 00:52:00",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-013",
+        "timestamp": "2026-07-05 00:52:01",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-014",
+        "timestamp": "2026-07-05 00:52:02",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-015",
+        "timestamp": "2026-07-05 00:52:04",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-016",
+        "timestamp": "2026-07-05 00:52:04",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-017",
+        "timestamp": "2026-07-05 00:52:05",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-018",
+        "timestamp": "2026-07-05 00:52:06",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-019",
+        "timestamp": "2026-07-05 00:52:06",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-020",
+        "timestamp": "2026-07-05 00:52:08",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-021",
+        "timestamp": "2026-07-05 00:52:09",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-022",
+        "timestamp": "2026-07-05 00:52:09",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-023",
+        "timestamp": "2026-07-05 00:52:10",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-024",
+        "timestamp": "2026-07-05 00:52:12",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-025",
+        "timestamp": "2026-07-05 00:52:12",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-026",
+        "timestamp": "2026-07-05 00:52:13",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-027",
+        "timestamp": "2026-07-05 00:52:13",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-028",
+        "timestamp": "2026-07-05 00:52:14",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-029",
+        "timestamp": "2026-07-05 00:52:15",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-030",
+        "timestamp": "2026-07-05 00:52:16",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-031",
+        "timestamp": "2026-07-05 00:52:17",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
+    },
+    {
+        "id": "IOC-032",
+        "timestamp": "2026-07-05 00:52:17",
+        "type": "Telemetry Anomaly",
+        "severity": "MEDIUM",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Abnormal telemetry behavior detected."
     }
 ]
