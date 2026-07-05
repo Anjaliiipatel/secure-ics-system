@@ -1,0 +1,11 @@
+[
+    {
+        "id": "IOC-001",
+        "timestamp": "2026-07-04 23:30:30",
+        "type": "Integrity Failure",
+        "severity": "CRITICAL",
+        "source": "temp_01",
+        "status": "ACTIVE",
+        "description": "Telemetry packet failed HMAC integrity validation."
+    }
+]
