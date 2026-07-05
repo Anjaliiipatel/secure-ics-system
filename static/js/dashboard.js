@@ -21,41 +21,62 @@ function randomBetween(min, max, decimals = 1) {
 // =========================================
 
 function updateTelemetry() {
-  const temp = document.getElementById("temp");
-  const pressure = document.getElementById("pressure");
-  const rpm = document.getElementById("rpm");
-  const vibration = document.getElementById("vibration");
+  async function updateTelemetry() {
+  try {
+    const response = await fetch("/api/telemetry");
+    const data = await response.json();
 
-  if (temp) temp.textContent = randomBetween(68, 84, 1);
-  if (pressure) pressure.textContent = randomBetween(135, 150, 1);
-  if (rpm) rpm.textContent = Math.floor(Math.random() * (2600 - 2200) + 2200);
-  if (vibration) vibration.textContent = randomBetween(1.8, 3.2, 2);
+    if (!data || data.length === 0) return;
+
+    const latest = data[data.length - 1];
+
+    document.getElementById("temp").textContent =
+      Number(latest.temperature || 0).toFixed(1);
+
+    document.getElementById("pressure").textContent =
+      Number(latest.pressure || 0).toFixed(1);
+
+    document.getElementById("rpm").textContent =
+      Math.floor(Number(latest.rpm || 0));
+
+    document.getElementById("vibration").textContent =
+      (Math.random() * (3.2 - 1.8) + 1.8).toFixed(2);
+
+  } catch (error) {
+    console.log("Telemetry API error:", error);
+  }
 }
+}
+
 
 // =========================================
 // Threat Score
 // =========================================
 
 function updateThreatScore() {
-  const scoreElement = document.getElementById("threat-score");
-  const labelElement = document.getElementById("threat-label");
+  async function updateThreatScore() {
+  try {
+    const response = await fetch("/api/threat-score");
+    const data = await response.json();
 
-  if (!scoreElement || !labelElement) return;
+    const scoreElement = document.getElementById("threat-score");
+    const labelElement = document.getElementById("threat-label");
 
-  const score = Math.floor(Math.random() * 70 + 12);
+    scoreElement.textContent = data.score;
+    labelElement.textContent = data.level;
 
-  scoreElement.textContent = score;
+    if (data.level === "LOW") {
+      labelElement.style.color = "#00ff9d";
+    } else if (data.level === "MEDIUM") {
+      labelElement.style.color = "#ffc857";
+    } else {
+      labelElement.style.color = "#ff5c8d";
+    }
 
-  if (score < 30) {
-    labelElement.textContent = "LOW";
-    labelElement.style.color = "#00ff9d";
-  } else if (score < 55) {
-    labelElement.textContent = "MEDIUM";
-    labelElement.style.color = "#ffc857";
-  } else {
-    labelElement.textContent = "HIGH";
-    labelElement.style.color = "#ff5c8d";
+  } catch (error) {
+    console.log("Threat score API error:", error);
   }
+}
 }
 
 // =========================================
@@ -158,21 +179,41 @@ function createEvent(message, isDanger = false) {
 }
 
 function updateEvents() {
+  async function updateEvents() {
   const events = document.getElementById("events");
-
   if (!events) return;
 
-  const isDanger = Math.random() > 0.72;
+  try {
+    const response = await fetch("/api/events");
+    const data = await response.json();
 
-  const message = isDanger
-    ? attackEvents[Math.floor(Math.random() * attackEvents.length)]
-    : normalEvents[Math.floor(Math.random() * normalEvents.length)];
+    events.innerHTML = "";
 
-  events.prepend(createEvent(message, isDanger));
+    data.events.slice(-7).reverse().forEach((line) => {
+      const isDanger =
+        line.includes("CRITICAL") ||
+        line.includes("HIGH") ||
+        line.includes("Replay") ||
+        line.includes("Integrity") ||
+        line.includes("Unauthorized");
 
-  while (events.children.length > 7) {
-    events.removeChild(events.lastChild);
+      const div = document.createElement("div");
+      div.className = isDanger ? "event danger" : "event";
+
+      div.innerHTML = `
+        <div>
+          <strong>${line.trim()}</strong><br>
+          <span>Security Monitoring</span>
+        </div>
+      `;
+
+      events.appendChild(div);
+    });
+
+  } catch (error) {
+    console.log("Events API error:", error);
   }
+}
 }
 
 // =========================================
@@ -187,29 +228,41 @@ const mitreTechniques = [
   ["T0831", "Manipulation of Control"]
 ];
 
-function updateMITRE() {
-  const mitre = document.getElementById("mitre-techniques");
+// =========================================
+// MITRE ATT&CK
+// =========================================
 
+async function updateMITRE() {
+  const mitre = document.getElementById("mitre-techniques");
   if (!mitre) return;
 
-  mitre.innerHTML = "";
+  try {
+    const response = await fetch("/api/mitre");
+    const techniques = await response.json();
 
-  mitreTechniques.forEach(([id, name]) => {
-    const item = document.createElement("div");
-    item.className = "mitre-item";
+    mitre.innerHTML = "";
 
-    item.innerHTML = `
-      <strong>${id}</strong>
-      <span>${name}</span>
-    `;
+    techniques.slice(0, 5).forEach((technique) => {
+      const item = document.createElement("div");
+      item.className = "mitre-item";
 
-    mitre.appendChild(item);
-  });
+      item.innerHTML = `
+        <strong>${technique.technique_id}</strong>
+        <span>${technique.technique}</span>
+      `;
+
+      mitre.appendChild(item);
+    });
+
+  } catch (error) {
+    console.log("MITRE API error:", error);
+  }
 }
 
 // =========================================
 // Incident Count
 // =========================================
+
 
 function updateIncidentCount() {
   const count = document.getElementById("incident-count");
@@ -218,7 +271,58 @@ function updateIncidentCount() {
 
   count.textContent = Math.floor(Math.random() * 5 + 1);
 }
+// =========================================
+// Incident Count
+// =========================================
 
+async function updateIncidents() {
+  const count = document.getElementById("incident-count");
+  if (!count) return;
+
+  try {
+    const response = await fetch("/api/incidents");
+    const incidents = await response.json();
+
+    const active = incidents.filter(
+      (incident) => incident.status === "OPEN"
+    );
+
+    count.textContent = active.length;
+
+  } catch (error) {
+    console.log("Incidents API error:", error);
+  }
+}
+// =========================================
+// IOCs List
+// =========================================
+
+async function updateIOCs() {
+  const container = document.getElementById("ioc-list");
+  if (!container) return;
+
+  try {
+    const response = await fetch("/api/iocs");
+    const iocs = await response.json();
+
+    container.innerHTML = "";
+
+    iocs.slice(-5).reverse().forEach((ioc) => {
+      const item = document.createElement("div");
+      item.className = `incident ${ioc.severity.toLowerCase()}`;
+
+      item.innerHTML = `
+        <strong>${ioc.id}</strong>
+        <span>${ioc.type} · ${ioc.severity} · ${ioc.source}</span>
+      `;
+
+      container.appendChild(item);
+    });
+
+  } catch (error) {
+    console.log("IOC API error:", error);
+  }
+}
 // =========================================
 // Reports Button
 // =========================================
@@ -262,10 +366,10 @@ function bootDashboard() {
   updateClock();
   updateTelemetry();
   updateThreatScore();
-  updateAttackMonitor();
   updateEvents();
   updateMITRE();
-  updateIncidentCount();
+  updateIncidents();
+  updateIOCs();
 
   setupReportsButton();
   setupNavigation();
@@ -273,10 +377,10 @@ function bootDashboard() {
   setInterval(updateClock, 1000);
   setInterval(updateTelemetry, 2000);
   setInterval(updateThreatScore, 3000);
-  setInterval(updateAttackMonitor, 5000);
   setInterval(updateEvents, 3500);
-  setInterval(updateIncidentCount, 4500);
   setInterval(updateMITRE, 8000);
+  setInterval(updateIncidents, 5000);
+  setInterval(updateIOCs, 5000);
 }
 
 document.addEventListener("DOMContentLoaded", bootDashboard);
